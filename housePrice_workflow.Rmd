@@ -1,0 +1,241 @@
+---
+title: "housePrice_workflow"
+author: "Yixing Tu"
+date: "2/14/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(purrr)
+library(broom)
+library(tidyverse)
+library(shiny)
+library(DT)
+library(forcats)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+df_old <- read_csv("housing.csv")
+#make clusters based on longitude and latitude
+df_sub <- df_old %>%
+  select(longitude,latitude)
+set.seed(100)
+house_cluster <- kmeans(df_sub, 2064)
+#combine the cluster with full data
+df<- cbind(cluster = house_cluster$cluster, df_old)
+df <- df %>%
+   group_by(cluster) %>%
+   filter(n()>10)
+subsets <- split_dataset(df, cluster)
+lm_func <- function(x){
+  lm(median_house_value ~ population * households * median_income, data = x)}
+fits <- fit_statistics(subsets, lm_func, cluster)
+group_list <- unique(df$cluster)
+```
+
+```{r}
+#brush_plots_other(df, fits, group_list, cluster, median_house_value)
+```
+
+```{r}
+#split the whole dataset into subsets based on the group of each sample
+split_dataset <- function(df, group) {
+
+  group <-enquo(group)
+
+  subsets <- df %>%
+    mutate(group = as.factor(!!group)) %>%
+    split(list(.$group))
+  return(subsets)
+}
+```
+
+```{r}
+#fit model
+fit_statistics <- function(subsets, lm_func, group) {
+  group <-enquo(group)
+  statistics <- subsets %>%
+    map(lm_func) %>%
+    map_dfr(tidy, .id = as_label(group)) %>%
+    select(!!group, everything())
+  return(statistics)
+  #write_csv(full_fits, "fit.csv")
+}
+```
+
+
+```{r}
+#statistics histograms
+draw_stats_histogram <- function(stats_df){
+  ggplot(stats_df %>% filter(term != "(Intercept)")) +
+    geom_histogram(aes(x = statistic), bins = 100) +
+    scale_y_continuous(expand = c(0, 0, .1, .1)) +
+    facet_wrap(~ term, scales = "free")
+}
+```
+
+```{r}
+brush_plots_other <- function(df, stats_df, group_list, group, value){
+  
+  stats_df_param <- stats_df %>% 
+    filter(term != "(Intercept)")
+  past_candidates <- c("-1")
+  
+  # overall ggplot theme
+  minimal_theme <- theme_minimal() + 
+    theme(
+      panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = "#f7f7f7"),
+      panel.border = element_rect(fill = NA, color = "#0c0c0c", size = 0.6),
+      axis.text = element_text(size = 11),
+      strip.text = element_text(size = 14),
+      axis.title = element_text(size = 16),
+      legend.position = "bottom"
+    )
+  theme_set(minimal_theme)
+  
+  shinyApp(
+    
+  ui = fluidPage(
+    ## could add a title by adding a new param
+    column(
+      plotOutput("distPlot", brush = brushOpts(direction = "x", id = "brush")),
+      width = 6
+    ),
+    
+    column(
+      plotOutput("plot_g2"),
+      width = 6  
+    ),
+    
+    dataTableOutput("table"),
+    selectInput("group", "ID", choices = group_list, multiple = TRUE),
+    selectInput("feature", "Features:", choices = names(df)[2:(ncol(df))], multiple = FALSE)
+  ),
+
+  server = function(input, output, session) {
+    
+    brushed_ids <- reactive({
+      current_points <- brushedPoints(stats_df_param, input$brush)
+      current_points %>%
+      select(term, .data[[group]])
+    })
+    
+    
+    table_data <- reactive({
+      current_rows <- stats_df_param %>%
+        mutate(statistic = round(statistic, 5)) %>%
+        select(.data[[group]], term, statistic) %>%
+        filter(.data[[group]] %in% brushed_ids()[[group]]) %>%
+        pivot_wider(names_from = term, values_from = statistic)
+      
+      
+      # sort table by effect sizes
+      if(nrow(current_rows) > 0) {
+        current_rows$magnitude <- abs(current_rows[, brushed_ids()$term[1]]) 
+        max <- max(current_rows$magnitude)
+        min <- min(current_rows$magnitude)
+        stat_term <- brushed_ids()$term[1]
+        
+        
+        current_rows <- stats_df_param %>%
+          mutate(statistic = round(statistic, 5)) %>%
+          select(.data[[group]], term, statistic) %>%
+          pivot_wider(names_from = term, values_from = statistic) 
+        current_rows$magnitude <- abs(current_rows[, brushed_ids()$term[1]])
+        
+        current_rows <- current_rows %>%
+          filter(magnitude <= max & magnitude >= min)
+        
+        current_rows <- current_rows %>% 
+          arrange(-magnitude) %>%
+          arrange_at(vars(-cluster:-magnitude))
+       current_rows <- current_rows %>% 
+          mutate(color = sign(current_rows[, brushed_ids()$term[1]])) %>%
+          select(-magnitude)
+      }
+    })
+    
+    output$distPlot <- renderPlot({
+      if(is.null(table_data())){
+        draw_stats_histogram(stats_df)
+      }
+      else{
+
+        current_data_po <- stats_df_param %>%
+          filter(.data[[group]] %in% (table_data() %>%
+                                filter(color == 1))[[group]])
+
+        current_data_ne <- stats_df_param %>%
+          filter(.data[[group]] %in% (table_data() %>%
+                                filter(color == -1))[[group]])
+
+        ggplot(stats_df_param, aes(x = statistic)) +
+          geom_histogram(bins = 100) +
+          geom_histogram(data = current_data_po, fill = "red", bins = 100) +
+          geom_histogram(data = current_data_ne, fill = "orange", bins = 100) +
+          scale_y_continuous(expand = c(0, 0, .1, .1)) +
+          labs(x = "ANOVA test statistic") +
+          facet_wrap(~ term, scales = "free") +
+          theme(strip.text = element_text(size = 14))
+      }
+    })
+
+    output$table <- renderDataTable({
+      message("data table")
+      datatable(
+        table_data(),
+        rownames = FALSE,
+        filter="top",
+        options = list(sDom = '<"top">lrt<"bottom">ip', columnDefs = list(list(visible=FALSE, targets=8)))
+      ) %>% formatStyle('color', target = 'row', backgroundColor = styleEqual(c(-1,1), c('#ffc14e', '#ff7676')))
+    })
+
+    output$plot_g2 <- renderPlot({
+      cur_groups <- unique(input[[group]])
+      if (length(cur_groups) != 0) {
+        x_small <- df %>%
+          filter(.data[[group]] %in%  cur_groups) %>%
+          mutate(group = factor(.data[[group]], levels = cur_groups))
+      } else {
+        x_small <- df[sample(1:nrow(df), 1000), ]
+      }
+
+      p <- ggplot(x_small) +
+        geom_point(aes_string(input$feature, value)) +
+        labs(y ="Intensity Values") +
+
+      if (length(cur_groups) != 0) {
+        p <- p + facet_wrap(~ group, scales = "free_y")
+      }
+      p
+    })
+
+    observe({
+      if(is.null(table_data())){
+        candidates = NULL
+      } else{
+        candidates <- table_data()[[group]]
+      }
+
+
+      if (!all(candidates == past_candidates)) {
+        selected_ids <- candidates[1:12]
+        past_candidates <- candidates
+      } else {
+        selected_ids <- input[[group]]
+      }
+
+      updateSelectInput(session, group, choices = candidates, selected = selected_ids)
+    })
+  },
+)
+}
+
+brush_plots_other(df, fits, group_list, "cluster", "median_house_value")
+```

@@ -14,10 +14,9 @@
 #' @import dplyr
 #' @import ggplot2
 #' @import shiny
+#' @importFrom DT datatable formatStyle styleEqual renderDT DTOutput
 #' @importFrom magrittr %>%
-#' 
 brush_plots_binary <- function(df, stats_df, group_list, group, value){
-  
   stats_df_param <- stats_df %>% 
     filter(term != "(Intercept)")
   past_candidates <- c("-1")
@@ -35,7 +34,6 @@ brush_plots_binary <- function(df, stats_df, group_list, group, value){
   theme_set(minimal_theme)
   
   shinyApp(
-    
     ui = fluidPage(
       ## could add a title by adding a new param
       column(
@@ -48,7 +46,7 @@ brush_plots_binary <- function(df, stats_df, group_list, group, value){
         width = 6  
       ),
       
-      dataTableOutput("table"),
+      DTOutput("table"),
       selectInput("group", "ID", choices = group_list, multiple = TRUE),
     ),
     
@@ -119,17 +117,22 @@ brush_plots_binary <- function(df, stats_df, group_list, group, value){
         }
       })
       
-      output$table <- renderDataTable({
+      output$table <- renderDT({
+        if(is.null(table_data())) {
+          return()
+        }
+
         datatable(
           table_data(),
           rownames = FALSE,
           filter="top",
           options = list(sDom = '<"top">lrt<"bottom">ip', columnDefs = list(list(visible=FALSE, targets=8)))
-        ) %>% formatStyle('color', target = 'row', backgroundColor = styleEqual(c(-1,1), c('#ffc14e', '#ff7676')))
+        ) %>% 
+        formatStyle('color', target = 'row', backgroundColor = styleEqual(c(-1,1), c('#ffc14e', '#ff7676')))
       })
       
       output$plot_g2 <- renderPlot({
-        cur_groups <- unique(input[[group]])
+        cur_groups <- unique(input$group)
         if (length(cur_groups) != 0) {
           x_small <- df %>%
             filter(.data[[group]] %in%  cur_groups) %>%
@@ -150,7 +153,7 @@ brush_plots_binary <- function(df, stats_df, group_list, group, value){
         p
       })
       
-      observe({
+      observeEvent(input$brush, {
         if(is.null(table_data())){
           candidates = NULL
         } else{
@@ -158,13 +161,13 @@ brush_plots_binary <- function(df, stats_df, group_list, group, value){
         }
         
         if (!all(candidates == past_candidates)) {
-          selected_ids <- candidates[1:12]
+          selected_ids <- head(candidates, 12)
           past_candidates <- candidates
         } else {
-          selected_ids <- input[[group]]
+          selected_ids <- input$group
         }
         
-        updateSelectInput(session, group, choices = candidates, selected = selected_ids)
+        updateSelectInput(session, "group", choices = candidates, selected = selected_ids)
       })
     },
   )

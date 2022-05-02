@@ -10,13 +10,12 @@
 #' @export
 #' @import dplyr
 #' @importFrom magrittr %>%
+#' @importFrom broom tidy
 #' @importFrom purrr map map_dfr
-
 fit_statistics <- function(subsets, lm_func, group) {
-  group <-enquo(group)
-  statistics <- subsets %>%
+  group <- enquo(group)
+  subsets %>%
     map(lm_func) %>%
     map_dfr(tidy, .id = as_label(group)) %>%
     select(!!group, everything())
-  return(statistics)
 }

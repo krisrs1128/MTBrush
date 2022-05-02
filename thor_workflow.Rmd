@@ -9,17 +9,20 @@ output: pdf_document
 library(tidyverse)
 library(MTBrush)
 knitr::opts_chunk$set(echo = TRUE)
+
+lm_func <- function(x) {
+  lm(log(value) ~ B * F * K, data = x)
+}
+
 ```
 
 ```{r}
 df <- read_csv("clean.csv")
 code <- function(z) { ifelse(str_detect(z, "\\+"), 1, -1) }
-df <- df %>%
-  mutate_at(vars(B, F, K, M), code)
-subsets <- split_dataset(df, compound)
-lm_func <- function(x){
-  lm(log(value) ~ B * F * K, data = x)}
-fits <- fit_statistics(subsets, lm_func, compound)
+fits <- df %>%
+  mutate(across(B:M, code)) %>%
+  split_dataset(compound) %>%
+  fit_statistics(lm_func, compound)
 group_list <- unique(df$compound)
 ```
 ```{r}

@@ -66,13 +66,11 @@ brush_plots_binary <- function(df, stats_df, group_list, group, value){
           filter(.data[[group]] %in% brushed_ids()[[group]]) %>%
           pivot_wider(names_from = term, values_from = statistic)
         
-        
         if(nrow(current_rows) > 0) {
           current_rows$magnitude <- abs(current_rows[, brushed_ids()$term[1]]) 
           max <- max(current_rows$magnitude)
           min <- min(current_rows$magnitude)
-          stat_term <- brushed_ids()$term[1]
-          
+          stat_term <- as.character(brushed_ids()$term[1])
           
           current_rows <- stats_df_param %>%
             mutate(statistic = round(statistic, 5)) %>%
@@ -81,13 +79,10 @@ brush_plots_binary <- function(df, stats_df, group_list, group, value){
           current_rows$magnitude <- abs(current_rows[, brushed_ids()$term[1]])
           
           current_rows <- current_rows %>%
-            filter(magnitude <= max & magnitude >= min)
-          
-          current_rows <- current_rows %>% 
+            filter(magnitude <= max & magnitude >= min) %>%
             arrange(-magnitude) %>%
-            arrange_at(vars(-compound:-magnitude))
-          current_rows <- current_rows %>% 
-            mutate(color = sign(current_rows[, brushed_ids()$term[1]])) %>%
+            arrange_at(vars(-.data[[group]]:-magnitude)) %>%
+            mutate(color = sign(.data[[stat_term]])) %>%
             select(-magnitude)
         }
       })

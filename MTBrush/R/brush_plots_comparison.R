@@ -59,10 +59,7 @@ comparison_plot <- function(comparison_df, group, axes_vars, cur_ids) {
 #' @export
 brush_plots_comparison <- function(df, comparison_df, group_list, group, 
                                    axes_vars, value) {
-  stats_df_param <- stats_df %>% 
-    filter(term != "(Intercept)")
   past_candidates <- c("-1")
-  
   shinyApp(
     ui = fluidPage(
       column(plotOutput("compPlot", brush = brushOpts(id = "brush")), width = 6),

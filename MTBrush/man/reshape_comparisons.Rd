@@ -4,7 +4,14 @@
 \alias{reshape_comparisons}
 \title{Reshape output from tests to enable comparison}
 \usage{
-reshape_comparisons(comparison_df, group, cur_ids, axes_vars, cur_var)
+reshape_comparisons(
+  comparison_df,
+  group,
+  cur_ids,
+  axes_vars,
+  cur_var,
+  effect_names
+)
 }
 \description{
 Reshape output from tests to enable comparison

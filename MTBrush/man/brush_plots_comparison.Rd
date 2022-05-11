@@ -4,7 +4,15 @@
 \alias{brush_plots_comparison}
 \title{Interactive scatterplot to compare statistics}
 \usage{
-brush_plots_comparison(df, comparison_df, group_list, group, axes_vars, value)
+brush_plots_comparison(
+  df,
+  comparison_df,
+  group_list,
+  group,
+  axes_vars,
+  value,
+  effect_names
+)
 }
 \description{
 Interactive scatterplot to compare statistics

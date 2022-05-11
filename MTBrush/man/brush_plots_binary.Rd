@@ -21,6 +21,6 @@ brush_plots_binary(df, stats_df, group_list, group, value)
 a shiny app
 }
 \description{
-This is the method to generate a shiny app displaying the histograms of statistics and scatter plots and a table 
+This is the method to generate a shiny app displaying the histograms of statistics and scatter plots and a table
 of selected observations.
 }

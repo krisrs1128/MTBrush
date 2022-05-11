@@ -21,8 +21,9 @@ set_theme <- function() {
 #' @import dplyr
 #' @import magrittr
 #' @export
-reshape_comparisons <- function(comparison_df, group, cur_ids, axes_vars, cur_var) {
-  comparison_df %>%
+reshape_comparisons <- function(comparison_df, group, cur_ids, axes_vars, 
+                                cur_var, effect_names) {
+  comparisons_df <- comparison_df %>%
     filter(.data[[group]] %in% cur_ids) %>%
     pivot_longer(all_of(axes_vars)) %>%
     unite("comparison", comparison:name, sep = "-") %>%
@@ -30,6 +31,13 @@ reshape_comparisons <- function(comparison_df, group, cur_ids, axes_vars, cur_va
     pivot_wider(names_from = "comparison", values_from = "value") %>%
     mutate(across(-.data[[group]], round, 3)) %>%
     arrange(-across(starts_with(cur_var)))
+  
+  if (ncol(comparisons_df) > 1) {
+    comparisons_df <- set_names(comparisons_df, c(group, effect_names))
+    
+  }
+
+  comparisons_df
 }
 
 #' Faceted scatterplot of compared statistics
@@ -58,8 +66,10 @@ comparison_plot <- function(comparison_df, group, axes_vars, cur_ids) {
 #' @importFrom DT DTOutput renderDT datatable
 #' @export
 brush_plots_comparison <- function(df, comparison_df, group_list, group, 
-                                   axes_vars, value) {
+                                   axes_vars, value, effect_names) {
+  set_theme()
   past_candidates <- c("-1")
+
   shinyApp(
     ui = fluidPage(
       column(plotOutput("compPlot", brush = brushOpts(id = "brush")), width = 6),
@@ -78,7 +88,14 @@ brush_plots_comparison <- function(df, comparison_df, group_list, group,
       table_data <- reactive({
         cur_var <- as.character(brushed_ids()$comparison[1])
         cur_ids <- brushed_ids()[[group]]
-        reshape_comparisons(comparison_df, group, cur_ids, axes_vars, cur_var)
+        reshape_comparisons(
+          comparison_df, 
+          group, 
+          cur_ids, 
+          axes_vars, 
+          cur_var, 
+          effect_names
+        )
       })
       
       

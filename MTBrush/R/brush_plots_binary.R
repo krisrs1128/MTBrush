@@ -21,18 +21,7 @@ brush_plots_binary <- function(df, stats_df, group_list, group, value){
     filter(term != "(Intercept)")
   past_candidates <- c("-1")
   
-  minimal_theme <- theme_minimal() + 
-    theme(
-      panel.grid.minor = element_blank(),
-      panel.background = element_rect(fill = "#f7f7f7"),
-      panel.border = element_rect(fill = NA, color = "#0c0c0c", size = 0.6),
-      axis.text = element_text(size = 11),
-      strip.text = element_text(size = 14),
-      axis.title = element_text(size = 16),
-      legend.position = "bottom"
-    )
-  theme_set(minimal_theme)
-  
+  set_theme()
   shinyApp(
     ui = fluidPage(
       ## could add a title by adding a new param

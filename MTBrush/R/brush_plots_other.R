@@ -16,26 +16,13 @@
 #' @import shiny
 #' @importFrom magrittr %>%
 
-brush_plots_other <- function(df, stats_df, group_list, group, value){
-
+brush_plots_other <- function(df, stats_df, group_list, group, value) {
   stats_df_param <- stats_df %>%
     filter(term != "(Intercept)")
   past_candidates <- c("-1")
-
-  minimal_theme <- theme_minimal() +
-    theme(
-      panel.grid.minor = element_blank(),
-      panel.background = element_rect(fill = "#f7f7f7"),
-      panel.border = element_rect(fill = NA, color = "#0c0c0c", size = 0.6),
-      axis.text = element_text(size = 11),
-      strip.text = element_text(size = 14),
-      axis.title = element_text(size = 16),
-      legend.position = "bottom"
-    )
-  theme_set(minimal_theme)
+  set_theme()
 
   shinyApp(
-
     ui = fluidPage(
       column(
         plotOutput("distPlot", brush = brushOpts(direction = "x", id = "brush")),

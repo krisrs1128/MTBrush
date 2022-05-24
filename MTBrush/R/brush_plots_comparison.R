@@ -76,6 +76,7 @@ brush_plots_comparison <- function(df, comparison_df, group_list, group,
       column(plotOutput("plot_g2"), width = 6),
       DTOutput("table"),
       selectInput("group", "ID", choices = group_list, multiple = TRUE),
+      downloadButton("download", "Download current rows")
     ),
 
     server = function(input, output, session) {
@@ -98,6 +99,14 @@ brush_plots_comparison <- function(df, comparison_df, group_list, group,
         )
       })
 
+      output$download <- downloadHandler(
+        filename = function() {
+          "table_data.csv"
+        },
+        content = function(fname) {
+          write_csv(table_data(), fname)
+        }
+      )
 
       output$compPlot <- renderPlot(
         comparison_plot(comparison_df, group, axes_vars, brushed_ids()[[group]])

@@ -36,7 +36,8 @@ brush_plots_other <- function(df, stats_df, group_list, group, value) {
 
       dataTableOutput("table"),
       selectInput("group", "ID", choices = group_list, multiple = TRUE),
-      selectInput("feature", "Features:", choices = names(df)[2:(ncol(df))], multiple = FALSE)
+      selectInput("feature", "Features:", choices = names(df)[2:(ncol(df))], multiple = FALSE),
+      downloadButton("download", "Download current rows")
     ),
 
     server = function(input, output, session) {
@@ -81,6 +82,15 @@ brush_plots_other <- function(df, stats_df, group_list, group, value) {
             select(-magnitude)
         }
       })
+
+      output$download <- downloadHandler(
+        filename = function() {
+          "table_data.csv"
+        },
+        content = function(fname) {
+          write_csv(table_data(), fname)
+        }
+      )
 
       output$distPlot <- renderPlot({
         if(is.null(table_data())){

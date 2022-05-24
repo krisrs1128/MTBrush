@@ -37,6 +37,7 @@ brush_plots_binary <- function(df, stats_df, group_list, group, value){
 
       DTOutput("table"),
       selectInput("group", "ID", choices = group_list, multiple = TRUE),
+      downloadButton("download", "Download current rows")
     ),
 
     server = function(input, output, session) {
@@ -75,6 +76,15 @@ brush_plots_binary <- function(df, stats_df, group_list, group, value){
             select(-magnitude)
         }
       })
+
+      output$download <- downloadHandler(
+        filename = function() {
+          "table_data.csv"
+        },
+        content = function(fname) {
+          write_csv(table_data(), fname)
+        }
+      )
 
       output$distPlot <- renderPlot({
         if(is.null(table_data())){

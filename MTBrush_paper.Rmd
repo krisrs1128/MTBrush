@@ -124,7 +124,7 @@ johnsonii (F), and either Pseudomonas Koreensis (K) or a corresponding mutant
 whose ability to produce the antibiotic korreincene (todo?) has been knocked out
 (Table X). Five replicates were gathered for each configuration, and each was
 metabolically profiled using Liquid chromatography–mass spectrometry (LCMS). The
-scientific goal of this study is to detect metabolites whose expression in joint
+scientific goal of this study is to detect compounds whose expression in joint
 communities (e.g., F + K) cannot be explained by simply interpolating expression
 when each of the constituent species are present in isolation. These metabolites
 may reflect higher-level competitive or synergistic effects within the
@@ -132,9 +132,19 @@ community.
 
 The associated dataset contains 60 samples, each with expression measurements
 across 3882 compounds. We frame the analysis as a parallel multiple hypothesis
-testing problem.
+testing problem. For each compound, we fit the saturated linear model
+`log(Abundance) ~ B * F * K`. The main effects describe how the expression level
+for a compound varies when the associated species are present or absent from the
+community. Interaction effects measure the extent to which these effects are
+modulated by coexistence of multiple species. For example, a strong, positive `F
+: K` interaction terms for a compound suggests that, in the FK condition, the
+compound is present at much higher levels than would be expected when only one
+of F or K are present in isolation.
 
-This plot shows the overall condition of the data points before any interaction. From the scatter plot, we can notice that the distribution of the data points are relatively uniform and there is no extreme outliers. 
+Figure `\ref{fig:thor_overview}` shows the MTBrush overview before the user has
+provided any query. From the scatterplot, we observe that the distribution of
+data points is relatively uniform across conditions and there are no extreme
+outliers.
 
 ![Example1.1](/Users/tuyixing/Desktop/Course/research/before.png)
 

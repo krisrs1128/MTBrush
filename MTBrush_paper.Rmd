@@ -100,9 +100,39 @@ F: The table of selected samples in the brushed area. Color corresponds to the c
 
 # Cases Study
 
+We illustrate the use of the `MTBrush` package using two case studies. Our
+examples are drawn from very different problem areas — metabolomic and spatial
+data analysis — but share common sources of complexity. Both problems require
+the application of regression models in parallel across a large collection,
+producing test statistics across both the terms in the model and members of the
+collection. It is difficult to inspect results across both dimensions using raw
+model output, and we illustrate how `MTBrush` can streamline the process.
+
 ## THOR Example
 
-The THOR dataset contains 3882 compounds with five replicate measurements under 12 different conditions. From the data, we want to find out the community effect of the Thor system.
+Our first case study considers metabolomic expression patterns in “The
+Hitchhicker’s of the Rhizosphere” (THOR) model microbial community. This model
+system makes it possible to examine the microbial behaviors that only emerge
+when multiple species are present in a shared environment. This provides a
+controlled environment with which to begin probing the microbial strain-level
+interactions that shape function in real-world microbiomes. We consider data
+from this system from an experiment designed to characterize the influence of
+species interactions on the community metabolome. Specifically, 12
+configurations of the THOR system were grown, corresponding to the presence or
+absence of each of three species, Bifidobacterium (todo?) (B), Flavobacterium
+johnsonii (F), and either Pseudomonas Koreensis (K) or a corresponding mutant
+whose ability to produce the antibiotic korreincene (todo?) has been knocked out
+(Table X). Five replicates were gathered for each configuration, and each was
+metabolically profiled using Liquid chromatography–mass spectrometry (LCMS). The
+scientific goal of this study is to detect metabolites whose expression in joint
+communities (e.g., F + K) cannot be explained by simply interpolating expression
+when each of the constituent species are present in isolation. These metabolites
+may reflect higher-level competitive or synergistic effects within the
+community.
+
+The associated dataset contains 60 samples, each with expression measurements
+across 3882 compounds. We frame the analysis as a parallel multiple hypothesis
+testing problem.
 
 This plot shows the overall condition of the data points before any interaction. From the scatter plot, we can notice that the distribution of the data points are relatively uniform and there is no extreme outliers. 
 

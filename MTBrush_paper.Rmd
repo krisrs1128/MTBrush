@@ -98,7 +98,7 @@ D: The scatter plots of top 12 samples in the table of selected samples will be 
 E: By default, only 12 samples will be chosen at first. Users can use the drop down menu to follow the samples of interests;  
 F: The table of selected samples in the brushed area. Color corresponds to the color in the upper histograms.
 
-# Cases Study
+# Cases Studies
 
 We illustrate the use of the `MTBrush` package using two case studies. Our
 examples are drawn from very different problem areas — metabolomic and spatial
@@ -108,7 +108,7 @@ producing test statistics across both the terms in the model and members of the
 collection. It is difficult to inspect results across both dimensions using raw
 model output, and we illustrate how `MTBrush` can streamline the process.
 
-## THOR Example
+## Discovering interactions in a model microbial system
 
 Our first case study considers metabolomic expression patterns in “The
 Hitchhicker’s of the Rhizosphere” (THOR) model microbial community. This model
@@ -148,22 +148,32 @@ outliers.
 
 ![Example1.1](/Users/tuyixing/Desktop/Course/research/before.png)
 
-In the figure below, we brushed compounds with large, positive F effects. The reflected negative compounds are in orange. The associated FK effects are mostly positive and the associated BFK effects are mostly negative (compare the orange bulks with 0). A possible explanation is that these orange compounds are consumed by F, which is why they decrease in the presence of F. The positive FK effects means those compounds are not being consumed so much when K is present. But when all three are present, the compound is less abundant again, it is an evidence for B protecting F.
+In the figure below, we brushed compounds with large, positive F effects. The
+reflected negative effect compounds are in orange. In this selection, the
+associated FK effects are mostly positive and the associated BFK effects are
+mostly negative (compare the orange bulk within this panel with 0). A possible
+explanation is that these selected, orange compounds are consumed by F, which is
+why they decrease in the presence of F. The positive FK effects suggest that 
+these compounds are not being consumed as rapidly when K is present. This is
+consistent with our understanding of the system...
+
+But when all three
+are present, the compound is less abundant again, it is an evidence for B
+protecting F.
+
+In this way, MTBrush has helped clarify the mechanisms that underlie emergent phenomena that have 
 
 ![Example1.2](/Users/tuyixing/Desktop/Course/research/Thor_example.png)
 
-## House Price Example
+## Navigating California home prices
 
-The House price dataset contains the information of 20640 areas around some longitude and latitude and including characteristics like population, households, and median income in those areas. From the data, we want to find out some trends among the house price and the condition of a house.
+Our next example uses `MTBrush` to support exploration of the California Housing Price dataset \cite{give citation}. This dataset includes prices of 20,640 homes, together with features of the homes and their neighborhoods, including the number of rooms and neighborhood’s median income, for example. These data are often used to evaluate supervised learning methods. Our focus instead is to visualize how the conditions of a home and neighborhood relate to observed prices, and how these effects vary geographically.
 
-Since the distribution of houses is not uniform among all areas, some area may contain hundreds of houses but others may only have a few houses. For areas with limited number of houses, it is not representative to fit a model and compare with other ares. Therefore, to solve this problem, in the data process phase we group the houses into 2064 clusters based on their longitude and latitude using k-mean clustering so that the number of houses in each cluster will be large enough to study. 
+Specifically, to understand how the influence of home and neighborhood features are modulated by geographic location, we partition the dataset into geographically disjoint sets and fit a linear model within each. The coefficients from these models can be plotted as histograms and brushed to identify features that are important in some locations but not others. Since some locations have many more houses than others, partitioning the data with a simple geographic grid would result in highly imbalanced sample sizes across the ensemble. For areas with limited number of houses, the results would not be comparable to those in areas with larger sample sizes. To address this, we first apply K-means to the geographic coordinates of the observed homes, resulting in 2064 clusters with more balanced sample sizes.
 
-From the overall distribution of the dataset, we can notice that the houses will top high price are normally 
-in ares with small population and the house price of areas with heavy population is relatively low. 
+Figure \ref{fig:homestart} shows the distribution of variable features before any user interactions. From this overview, we notice that the home prices are inversely related to the population density. In Figure \ref{fig:homebrush}, we brushed to highlight those houses with positive households effects. We find that the corresponding households and median income interaction effects are negative, suggesting that median income restrains the positive effects of households. Specifically, an increase in  the median income of a neighborhood has a smaller effect on average home price when the number of households in that neighborhood is large. When the population variable is also added, the three-way interaction term seems to have a positive effects again. 
 
-In the following figure, we brushed houses with positive households parameters. While, the corresponding households and median income interaction parameters are negative, which represents that median income restrains the positive effects of households. When population is also added, the tree-way interaction term seems to have a positive effects again. 
-
-For house price dataset, it is normal to fit a mode and use the model to make predictions for house price. While by performing multiple hypothesis testing, it is convenient to compare the trend within different areas and the scatter plots allow us to notice the detail of each invidual house in the area. 
+For this dataset, it is typical to fit a single nonlinear model use it to make predictions for house price. Interpreting the result of this fit can be challenging, however. In contrast, by interacting with a full ensemble of simple models, we can easily compare geographic variation in effects, using individual panels to observe characteristics of individual homes in each area.
 
 ![Example2](/Users/tuyixing/Desktop/Course/research/example2.png)
 

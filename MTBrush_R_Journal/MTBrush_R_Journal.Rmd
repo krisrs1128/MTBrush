@@ -1,5 +1,5 @@
 ---
-title: MTBrush: an R Package for Interactive Visualization Under Multiple Hypothesis Testing Context
+title: "MTBrush: an R Package for Interactive Visualization Under Multiple Hypothesis Testing Context"
 author:
   # see ?rjournal_article for more information
   - name: Yixing Tu
@@ -40,6 +40,9 @@ bibliography: RJreferences.bib
 
 output: rticles::rjournal_article
 ---
+
+Here is an example reference [@efron2021computer].
+
 
 ## Introduction
 

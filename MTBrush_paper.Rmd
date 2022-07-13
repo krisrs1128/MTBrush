@@ -86,19 +86,19 @@ value: the column name for response variable;
 
 *return*: the shiny user interface contains histograms of statistics and scatter plots and a table of selected observations.
 
-![Workflow](/Users/tuyixing/Desktop/Course/research/workflow_pic.png)
+![Workflow](../MTBrush/workflow_pic.png)
 
 ## Operation
 
 Before users make any interactions, the user interface of the generated Shiny app is made of a group of histograms of statistics(section A) and a scatter plot(section B) for all samples as shown in the figure "Interface before interaction". Users can brush through any histogram on section A to query for significant samples on tails, then the selected tail and the opposite end will be highlighted in different colors as shown in "Interface after brushing". The scatter plot(section D) will be replaced by a collection of scatter plots of selected samples, which allow users to check details on each selected samples. After brushing, a table(section F) will show up and the id of selected samples are on section E and we can use the drop down menu in this section to add or delete selected samples. From the table, Users can also access the test statistics of each term for selected samples. The test statistic value of the currently brushed histogram will determine the order of compounds in the table. The most extreme value will be at the top and the least extreme value will be at the bottom. For example, if a user selects an interval on the B histogram, the first compound in the table has the most extreme B test statistic. Also, scatter plots are arranged in the same order as the table.
 
 
-![Interface before interaction](/Users/tuyixing/Desktop/Course/research/interface1.jpg)
+![Interface before interaction](../MTBrush/interface1.jpg)
 
 A: Histograms of test statistics, brush through any one of the histogram to select samples;  
 B: Before brushing, a scatter plot of all samples will appear to give an overall distribution of the dataset.  
 
-![Interface after brushing](/Users/tuyixing/Desktop/Course/research/interface2.jpg)
+![Interface after brushing](../MTBrush/interface2.jpg)
 
 C: After brushing, test statistics greater than and less than the threshold will be highlighted (red for positive and orange for negative values). The selected samples will be highlighted in all histograms;  
 D: The scatter plots of top 12 samples in the table of selected samples will be shown here. By adding or deleting the chosen ID on the left select menu, users can choose to see the scatter plot of the sample they have interests on;  
@@ -153,7 +153,7 @@ provided any query. From the scatterplot, we observe that the distribution of
 data points is relatively uniform across conditions and there are no extreme
 outliers.
 
-![Example1.1](/Users/tuyixing/Desktop/Course/research/before.png)
+![Example1.1](../MTBrush/before.png)
 
 In the figure below, we brushed compounds with large, positive F effects. The
 reflected negative effect compounds are in orange. In this selection, the
@@ -170,7 +170,7 @@ protecting F.
 
 In this way, MTBrush has helped clarify the mechanisms that underlie emergent phenomena that have 
 
-![Example1.2](/Users/tuyixing/Desktop/Course/research/Thor_example.png)
+![Example1.2](../MTBrush/Thor_example.png)
 
 ## Navigating California home prices
 
@@ -182,7 +182,7 @@ Figure \ref{fig:homestart} shows the distribution of variable features before an
 
 For this dataset, it is typical to fit a single nonlinear model use it to make predictions for house price. Interpreting the result of this fit can be challenging, however. In contrast, by interacting with a full ensemble of simple models, we can easily compare geographic variation in effects, using individual panels to observe characteristics of individual homes in each area.
 
-![Example2](/Users/tuyixing/Desktop/Course/research/example2.png)
+![Example2](../MTBrush/example2.png)
 
 # Discussion
 

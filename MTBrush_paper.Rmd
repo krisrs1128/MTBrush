@@ -10,11 +10,29 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Abstract
-To analysis data made of n group of m measurements and p parameters especially when n is large, one approach is fitting a set of models for each group and getting the n test statistics. Since the number of group is large, it is not easy to compare among groups and extract marginal cases directly from test statistics. Visualization can make extreme cases stand out from the population. MTBrush is an R package that can be used to conduct and visualizing such multiple hypothesis tests for such high dimensional datasets. It allows users to fit n regression models and visualizing histograms of test statistics. To further investigate results, it adds an interactive tools allowing users to brush through histograms and query for significant groups. By comparing the highlighted part in the histograms of different terms and with the help of corresponding scatter plots, users can easily identify whether the interaction terms have synergistic or competitive effects and then make informative conclusions. 
+
+MTBrush is an R package for testing and exploring a large collection of
+hypothesis. By applying the principle of dynamic linking to histograms of test
+statistics, the package supports efficient navigation of significance in
+multiple hypothesis testing settings. The package is motivated by problems that
+require estimation of an ensemble of $n$ linear models, where each model is
+associated with one context — for example, a gene or metabolite. Each model is
+associated with $p$ test statistics, leading to $n \times p$ test statistics
+overall. We are often interested in detecting contexts with high significance,
+examining correlation across the $p$ statistics, and comparing sets of related
+contexts.
+
+To support these queries, MTBrush provides an interactive interface based on
+brushing dynamically linked histograms. By comparing the highlighted intervals
+across histograms of different statistics and by cross-referencing with
+scatterplots of the original data, users rapidly evaluate visual queries in the
+multiple testing setting. We apply the MTBrush to two applications in spatial
+and metabolome data analysis. We find that MTBrush can help users easily
+identify synergistic and competitive effects in the ensemble testing setting.
 
 # Keywords
 
-Multiple hypothesis testing, interaction diagrams, R package;
+Multiple hypothesis testing, interactive visualization, dynamic linking, interaction effects, R package;
 
 # Introduction
 

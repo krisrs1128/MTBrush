@@ -47,13 +47,12 @@ Multiple hypothesis testing, interactive visualization, dynamic linking, interac
 # Introduction
 
 Large-scale datasets often emerge as the combining many smaller, parallel ones.
-For example, in microbial ecology, it is common to simultaneously measure the
+For example, in microbiome studies, it is common to simultaneously measure the
 abundances of thousands of species, and each species can be considered as its
 own, small-scale context. When our goal is to sift through this collection in
 search for interesting associations (e.g., with a treatment),  it is common to
 compute one summary statistic per context and use these summaries to focus
 subsequent attention. This is the logic behind multiple hypothesis testing.
-
 Typically, the results of multiple hypothesis tests are printed as tables of
 significant contexts, and studies often report these as targets for potential
 follow-up. While these lists are useful, it is often necessary to more deeply
@@ -63,9 +62,48 @@ valuable to know whether several flagged metabolites belong to the same
 metabolic pathway.
 
 To support these more complete interpretations, we develop the MTBrush package.
+The package provides an interactive Shiny interface to the results of a
+collection of separate, but related, multiple hypothesis tests. The interface
+builds from the methodological proposals of [@efron, @stephens], where the
+histogram of test statistics serves as a device for estimating false discovery
+rates. While we similarly focus on the empirical distribution of test
+statistics, MTBrush places these histograms in a central role, allowing users to
+directly inspect these histograms within context. An advantage of this
+perspective is that it becomes possible to explore relations in more complex
+designs, including those where formal false discovery rate estimation procedures
+may be unavailable. For example, in Case Study 1 below, we are interested in
+evaluating metabolome-wide differential expression under more than one
+perturbation to a model microbial system. On its own, each perturbation leads to
+a multiple hypothesis testing problem. Viewed together, the collection of
+perturbations leads to an ensemble of correlated multiple testing problems.
+Which metabolites are significantly differentially expressed across multiple
+perturbations? To what extent are the differentially expressed metabolites
+shared across perturbation types? MTBrush provides as a natural exploratory
+framework for such comparisons.
 
+One of the difficulties of visualization in the multiple testing setting is that
+the data of interest are inherently high-dimensional, and static visualization
+is limited in the number of dimensions that it can naturally encode. That is,
+though it is straightforward to visualize distributional differences across
+conditions for each feature (e.g., through a set of boxplots), when the number
+of features grows, such an approach becomes untenable. In the high-dimensional
+visualization literature, linked brushing provides a strategy for providing
+details on units of interest while maintaining global context. Specifically, in
+linked brushing, several views of a single underlying dataset are presented
+simultaneously. When a user selects a subset of units in one view, the
+corresponding units across all views are highlighted. In this way, the user can
+build intuition about the distribution of feature values across all panels,
+conditional on lying within the selected subset for one panel. For example,
+linked scatterplot brushing can be used to show how groups of $\geq 3$ features
+co-vary.
 
-For the rest of this paper, the methods part will discuss the basic function, input, and output of each method in the the package and how to use those methods to make multiple hypothesis testing analysis on a data set. The case study will provide two examples under microbiome and house prices context of applying this package to find the interaction effect of different terms on each other. In the end, the discussion section will talk about the future direction of this research.
+For the rest of this paper, the methods part will discuss the basic function,
+input, and output of each method in the the package and how to use those methods
+to make multiple hypothesis testing analysis on a data set. The case study will
+provide two examples under microbiome and house prices context of applying this
+package to find the interaction effect of different terms on each other. In the
+end, the discussion section will talk about the future direction of this
+research.
 
 
 I think some of the material in the paragraphs below should go into something

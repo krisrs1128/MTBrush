@@ -157,6 +157,14 @@ both functions -- the `feature` column is understood directly without quoting.
 This provides an interface familiar from packages in the tidyverse.
 
 \color{violet}
+* This is a simple randomly generated dataset which doesn't have any non-null
+main or interaction effects. Could we create a version which does, and then
+include that in the package?
+* Is there a way to provide a default value for the `condition` column for
+`brush_plots_binary`? Having to include this makes the package a bit harder to
+use. At the very least, we should make sure that the "condition" column is
+described in the documentation for this function.
+
 ```{r, echo = TRUE, warning = FALSE, message = FALSE}
 library(MTBrush)
 library(tidyverse)
@@ -169,7 +177,7 @@ example_data <- expand.grid(
 ) %>%
   mutate(
     value = rnorm(n()),
-    condition = case_when( # Is there a way to provide a default value for this? Having to include this makes the package a bit harder to use. At the very least, make sure that the expectation that a "condition" column is provided is described in the documentation.
+    condition = case_when( 
       X1 & X2 ~ "X1X2",
       X1 & !X2 ~ "X1",
       !X1 & X2 ~ "X2",

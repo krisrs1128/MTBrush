@@ -1,60 +1,54 @@
 ---
-title: "MTBrush: an R Package for Interactive Visualization Under Multiple Hypothesis Testing Context"
+title: "MTBrush: Linked Histogram Brushing for Exploration of Multiple Hypotheses"
 author:
   - name: Yixing Tu
     affiliation: University of Wisconsin-Madison
     address:
-    - line 1
-    - line 2
-    url: https://journal.r-project.org
+    - 1300 University Ave
+    - Madison, WI
+    - 53706
     orcid: 0000-0002-9079-593X
     email:  ytu26@wisc.edu
+  - name: Marc Chevrette
+  - name: Chris Thomas
+  - name: Jo Handelsman
   - name: Kris Sankaran
-    url: https://journal.r-project.org
-    email: author2@work
+    url: https://krisrs1128.github.io/LSLab
+    email: ksankaran@wisc.edu
     orcid: 0000-0002-9079-593X
     affiliation: University of Wisconsin-Madison
     address:
-    - line 1 affiliation 1
-    - line 2 affiliation 1
-    affiliation2: Affiliation 2
-    address2:
-    - line 1 affiliation 2
-    - line 2 affiliation 2
-  - name: Author Three
-    url: https://journal.r-project.org
-    email: author3@work
-    affiliation: Affiliation
-    address:
-    - line 1 affiliation
-    - line 2 affiliation
+    - 1300 University Ave
+    - Madison, WI
+    - 53706
 abstract: >
-  MTBrush is an R package for testing and exploring a large collection of hypothesis. By applying the principle of dynamic linking to histograms of test statistics, the package supports efficient navigation of significance in multiple hypothesis testing settings. The package is motivated by problems that require estimation of an ensemble of $n$ linear models, where each model is associated with one context — for example, a gene or metabolite. MTBrush provides an interactive interface based on brushing dynamically linked histograms. By comparing the highlighted intervals across histograms of different statistics and by cross-referencing with scatterplots of the original data, users rapidly evaluate visual queries in the multiple testing setting. We apply the MTBrush to two applications in spatial and metabolome data analysis. We find that MTBrush can help users easily identify synergistic and competitive effects in the ensemble testing setting.
+  MTBrush is an R package for testing and exploring a large collection of hypothesis. By applying the principle of dynamic linking to the multiple hypothesis testing setting, the package supports efficient navigation of estimated effects and their relationships. The package is motivated by problems that require estimation of an ensemble of $n$ linear models, where each model is associated with one feature — for example, a gene or metabolite. MTBrush provides an interactive interface based on brushing dynamically linked histograms. By comparing the highlighted intervals across histograms of different statistics and by cross-referencing with scatterplots of the original data, users can rapidly evaluate visual queries across an ensemble of models. We apply the MTBrush to two applications in microbiome and spatial data analysis, respectively. We find that MTBrush can help users easily identify interaction effects in multiple hypothesis testing with complex designs.
 preamble: |
-  % Any extra LaTeX you need in the preamble
+  \input{preamble}
 bibliography: MTBrush-R-Journal.bib
 output: rticles::rjournal_article
 ---
 ```{r, echo = FALSE}
 library(knitr)
-opts_chunk$set(out.width = 400, echo = FALSE)
+opts_chunk$set(out.width = 400, echo = FALSE, cache = TRUE)
+set.seed(100)
 ```
 
 # Keywords
 
-Multiple hypothesis testing, interactive visualization, dynamic linking, interaction effects, R package;
+Multiple hypothesis testing, interactive visualization, dynamic linking, interaction effects, R package
 
 # Introduction
 
-Large-scale datasets often emerge as the combining many smaller, parallel ones.
-For example, in microbiome studies, it is common to simultaneously measure the
+Large-scale datasets often emerge by combining many smaller, parallel ones. For
+example, in microbiome studies, it is common to simultaneously measure the
 abundances of thousands of species, and each species can be considered as its
 own, small-scale context. When our goal is to sift through this collection in
 search for interesting associations (e.g., with a treatment),  it is common to
-compute one summary statistic per context and use these summaries to focus
+compute one summary statistic per feature and use these summaries to focus
 subsequent attention. This is the logic behind multiple hypothesis testing.
 Typically, the results of multiple hypothesis tests are printed as tables of
-significant contexts, and studies often report these as targets for potential
+significant features, and studies often report these as targets for potential
 follow-up. While these lists are useful, it is often necessary to more deeply
 explore properties of the flagged hypotheses in order to develop more
 substantive interpretations and design further experiments. For example, it is
@@ -64,86 +58,164 @@ metabolic pathway.
 To support these more complete interpretations, we develop the MTBrush package.
 The package provides an interactive Shiny interface to the results of a
 collection of separate, but related, multiple hypothesis tests. The interface
-builds from the methodological proposals of [@efron, @stephens], where the
-histogram of test statistics serves as a device for estimating false discovery
-rates. While we similarly focus on the empirical distribution of test
+builds from the methodological proposals of [@efron2021computer, @stephens],
+where the histogram of test statistics serves as a device for estimating false
+discovery rates. While we similarly focus on the empirical distribution of test
 statistics, MTBrush places these histograms in a central role, allowing users to
 directly inspect these histograms within context. An advantage of this
 perspective is that it becomes possible to explore relations in more complex
 designs, including those where formal false discovery rate estimation procedures
 may be unavailable. For example, in Case Study 1 below, we are interested in
-evaluating metabolome-wide differential expression under more than one
-perturbation to a model microbial system. On its own, each perturbation leads to
-a multiple hypothesis testing problem. Viewed together, the collection of
-perturbations leads to an ensemble of correlated multiple testing problems.
-Which metabolites are significantly differentially expressed across multiple
-perturbations? To what extent are the differentially expressed metabolites
-shared across perturbation types? MTBrush provides as a natural exploratory
-framework for such comparisons.
+evaluating metabolome-wide differential expression under multiple perturbations
+to a model microbial system. Interest lies in the possibility of the emergence
+of synergies when applying multiple perturbations simultaneously. On their own,
+each perturbation leads to a multiple hypothesis testing problem. Viewed
+together, the collection of perturbations leads to an ensemble of related
+multiple testing problems. Which metabolites are significantly differentially
+expressed across multiple perturbations? To what extent are the differentially
+expressed metabolites shared across perturbation types? MTBrush provides as a
+natural exploratory framework for such comparisons.
 
 One of the difficulties of visualization in the multiple testing setting is that
 the data of interest are inherently high-dimensional, and static visualization
-is limited in the number of dimensions that it can naturally encode. That is,
-though it is straightforward to visualize distributional differences across
-conditions for each feature (e.g., through a set of boxplots), when the number
-of features grows, such an approach becomes untenable. In the high-dimensional
-visualization literature, linked brushing provides a strategy for providing
-details on units of interest while maintaining global context. Specifically, in
-linked brushing, several views of a single underlying dataset are presented
-simultaneously. When a user selects a subset of units in one view, the
-corresponding units across all views are highlighted. In this way, the user can
-build intuition about the distribution of feature values across all panels,
-conditional on lying within the selected subset for one panel. For example,
-linked scatterplot brushing can be used to show how groups of $\geq 3$ features
-co-vary.
+is limited in the number of dimensions that it can naturally encode [@Wills].
+That is, though it is straightforward to visualize distributional differences
+across conditions for each feature (e.g., through a set of boxplots), when the
+number of features grows, such an approach becomes untenable. In the
+high-dimensional visualization literature, dynamic linking provides a strategy
+for providing details on units of interest while maintaining global context
+\color{violet} Add reference to Buja, Cook, Swayne (1996?) high dimensional
+visualization \color{black}. Specifically, in dynamically linked brushing,
+several views of a single underlying dataset are presented simultaneously. When
+a user selects a subset of units in one view, the corresponding units across all
+views are highlighted. In this way, the user can build intuition about the
+distribution of feature values across all panels, conditional on lying within
+the selected subset for one panel. For example, linked scatterplot brushing can
+show how groups of $\geq 3$ features co-vary — points lying in one region for
+one scatterplot may consistently lie in a narrow region of a linked scatterplot
+\color{violet} Add reference to Becker and Cleveland scatterplot brushing
+\color{black}.
 
-For the rest of this paper, the methods part will discuss the basic function,
-input, and output of each method in the the package and how to use those methods
-to make multiple hypothesis testing analysis on a data set. The case study will
-provide two examples under microbiome and house prices context of applying this
-package to find the interaction effect of different terms on each other. In the
-end, the discussion section will talk about the future direction of this
-research.
-
-
-I think some of the material in the paragraphs below should go into something
-like a “method” section, describing the details of our implementation. It is too
-specific to include in an introduction (whose purpose is to draw the reader in
-and give a high-level overview of the contributions of the paper).
-
-
-When dealing with high volume dataset such as taking repetitive measurements over many samples with slight change on one parameter each time especially in microbiome and microarray study, a large amount of test statistics will be generated by performing large-scale testing. For example, according to Efron and Hastie in the book "Computer Age Statistical Inference", to make analysis for the prostate cancer data which contained n = 102 samples, 52 experimental samples and 50 controls and N = 6033 genes and 6033 * 102 matrix of measurements. In this study, a two-sample t statistics was applied to each gene, and generated 6033 test statistics in total. When more than one parameters are measured, the two-sample t statistics is not applicable, then we can fit a collection of regression models, one per sample. It will be easier to compare when all statistics come from the same model. We use this fitting models approach in our package to set up the hypothesis testing and interpreted the effects from the test results.
-
-After having the test statistics, it can be tedious and time consuming to analyze results from the multiple hypothesis testing procedure due to the large amount. Visualization of statistics can help to reveal some information from the data. A common approach is generating histograms of test statistics to compare with the null threshold curve and distinguish the non-null cases on the tails. Using the same example as above, they drew a histogram for 6033 t statistics and compared the distribution with the scaled N(0,1) density curve, all genes under the curve were consider as null. With this histogram, one can notice that there are some non-null genes around the tails, but there is no way to know the gene id and measurements of those non-null genes and it is impossible to pick out those genes and compare those with null genes. Therefore, one were not able to tell the difference between null and non-null genes and it is hard to tell whether the boundary cases were test error or non-null indeed. It reveals the problem of this approach that histograms can only tell the presence of significant cases, but it failed to locate such cases so it prevent us from further interpreting the significance in the data and giving examples to support our hypothesis about the terms' effects. Also, it is especially hard to interpret plots as plots getting complex in some high dimensional and multivariate studies (Wills, 08). In the prostate data study, one gene of a man only has one measurement, the situation will be more intricacy when there are multiple measurements for each gene. 
-
-Those two problems can be solved by linking plots. Not trying to make a complex plots explain everything from the data and test results, we could build several simpler parts and link them together to help to analyze the data. We decide to link test statistics with the information form the raw data. We found that brushing has been used for connected statistics on multiple levels to one another (Wickham), but there isn't one for models under multiple hypothesis settings. Therefore, this package is trying build the linked visualizations for multiple hypothesis testing studies. By brushing through one of the histogram, samples in the brushed region will be selected. Selected samples will be highlighted in all histograms so we can see the distribution of statistics of other parameters for those samples. A table of all parameters' test statistics of selected samples is present so we can take a look at the average change in the presence of each parameter and the extent of effects for the interaction terms. To link histograms of test statistics with raw data, the scatter plots of selected sample with measurements under each term will appear after brushing so we can check if a large statistic accords with increase of measurement for some samples. With the help of these functions, it will be much easier to do analysis for large scale hypothesis testing.
+The remainder of the paper is structured as follows. Section 1 describes the
+design of the MTBrush package, the inputs and outputs of the available
+functions, and the practical workflow from testing to interpretation. Section 2
+provides two case studies, the first to metabolomic analysis of a model
+microbiological system and the second to a spatial analysis of home prices.
+We conclude with a brief summary.
 
 # Methods
 
-## Implementation
 
-After load a data set, we first need to split samples into some groups based on some criteria then we can apply hypothesis testing to each group by fitting to parallel models chosen by users. Then with test results, we will make one statistical histogram for one term to show the distribution of this term's test statistics and those histograms will serve as base plots of our shiny app. By brushing through any histogram, all samples in the selected region and opposite side will be highlighted in all histograms. At the same time, the scatter plots of selected samples will appear to give information from the loading dataset and the test statistics of those samples will be shown in a chart. With this design, we could select extreme cases from a histogram and see the distribution of those cases in other histogram to get some hints on if the two measurements have positive or negative effects or no effect on each other at all. For example, in the figure "Interface after brushing", we brush on B term. If we look at the histogram of BK interaction term, we found that the red points distributed on the left side. It could be a hint that K has a negative effect on B. Then by looking into details of test statistics and measurements of those samples and compare those information with other samples, we could make conclusions on possible correlations between variables and explain those effects.
+MTBrush has two main types of functions: Helpers that support testing of multiple hypotheses (Section 2.1) and methods for launching interactive interfaces based on test results (Section 2.2).
 
-The package contains five methods:
+## Helper functions for multiple testing
 
-**split_dataset(df, group)**: This function splits the given data set into many smaller subsets based on the group. Each subset only contains measurements of a sample and all subsets take same measurements.
+MTBrush provides utilities to apply multiple hypothesis testing across features.
+We place special emphasis on situations where multiple test statistics are
+generated for each feature, since when there are multiple histograms of test statistics to compare, linked brushing is especially helpful. Two functions support this step, `split_dataset()` and
+`fit_statistics()`. The first function splits a dataset across the features over
+which tests should be computed. For example, in the metabolomic application
+below, this is used to split a single data.frame across metabolites into a list
+of data.frames, one for each metabolite. The second maps a user-specified
+hypothesis testing function across features defined by the first. A description
+of the inputs and outputs of this function are provided in Table 1.
 
-*parameters*: 
+| Function | Description | Inputs | Outputs |
+|---|---|---|---|
+| **`split_dataset(df, group)`** | | |
+| **`fit_statistics(subsets, lm_func, group)`** | | |
+| | | |
 
-df: the given data frame;   
-group: the name of the group column
+\color{violet}
+Can you figure out how to put the information below into the table
+above? My guess is that the R Journal template file discusses how to include /
+format tables for publication, but let me know if this is not easy to find.
+\color{black}
 
-*return*: groups of subsets
+This function splits the given data set into many smaller subsets based on the feature of interest. Each subset only contains measurements of a sample and all subsets take same measurements. | `df`: A long `data.frame` with sample measurements across all features. * `group`: A column giving the name of the feature over which to split the `data.frame` for downstream testing. | A list with one `data.frame` for each feature specified in `group`. |
+This method maps overall all groups of subsets and returns a set of test statistics associated with each. The testing function can be specified by the user. | `subsets`: List of data.frame subsets as output by `split_dataset`  
+`lm_func`: A function that takes one subset of samples and returns a vector of test statistics associated with it.
+`group`: The name of the column used when initially splitting measurements across features. |
+A single data.frame with statistics from the collection of tests across features
 
-**fit_statistics(subsets, lm_func, group)**: This method helps to fit a model chosen by users for all groups of subset. 
+For example, we split a randomly generated dataset in the block below. The
+simulated data supposes a design in which two perturbations (A and B) are
+applied to 10 features of interest. For each combination of perturbations, five
+samples are collected per feature. We annotate each configuration of
+perturbations in two ways -- one column labeling which perturbations are active
+(`condition`) and several providing a binary encoding of the same conditions
+(`A` and `B`). The `condition` column allows the user to customize the labeling
+of perturbations in downstream visualization.
 
-*parameters*: 
+A linear model is then used to evaluate the existence of main and interaction
+effects across the perturbations, for each feature of interest. The `estimate`
+column in the output below includes $t$-statistics associated with each term in
+the model. For each feature, the empirical distribution of the `estimate` column
+is approximately $t$-distributed, because in this simulated example, there are
+no true significant effects. Finally, note the use of nonstandard evaluation in
+both functions -- the `feature` column is understood directly without quoting.
+This provides an interface familiar from packages in the tidyverse.
 
-subsets: groups of subset from split_dataset function;  
-lm_func: the linear model chosen by user to fit the data;  
-group: the name of the group column
+\color{violet}
+```{r, echo = TRUE, warning = FALSE, message = FALSE}
+library(MTBrush)
+library(tidyverse)
 
-*return*: a table with statistics of each term for all subsets
+example_data <- expand.grid(
+  sample = seq_len(5),
+  feature = seq_len(1000),
+  X1 = c(FALSE, TRUE),
+  X2 = c(FALSE, TRUE)
+) %>%
+  mutate(
+    value = rnorm(n()),
+    condition = case_when( # Is there a way to provide a default value for this? Having to include this makes the package a bit harder to use. At the very least, make sure that the expectation that a "condition" column is provided is described in the documentation.
+      X1 & X2 ~ "X1X2",
+      X1 & !X2 ~ "X1",
+      !X1 & X2 ~ "X2",
+      !X1 & !X2 ~ "Neither"
+      )
+    )
+
+fit_results <- example_data %>%
+  split_dataset(feature) %>%
+  fit_statistics(~ lm(value ~ X1 * X2, .), feature)
+head(fit_results)
+```
+\color{black}
+
+## Visualization of multiple testing results
+
+Given test statistic outputs associated with each feature, the next step in the
+MTBrush workflow (Figure 1) is interactive visualization through histogram
+brushing. Table 2 describes functions that implement this step. Note that
+different functions are provided depending on whether the perturbations are
+binary (active / inactive) or continuous — we focus discussion here on the
+binary case, but both settings are illustrated in the case studies below.
+
+An example initial view provided by these functions is given in Figure
+\ref{fig:interface1}. This initial view includes several histograms of test
+statistics (section A) and a scatterplot of original measurements across all
+conditions (section B). Recall that several model terms may be estimated for
+each feature, each associated with its own test statistic. Each panel in
+(section A) corresponds to one model term. Features with extreme values of a
+given test statistic appear in the tails of the corresponding histogram. For
+example, based on the design of the linear model input to `fit_statistics`,
+features in the right tail of panel `X1` in section A have systematically larger
+values in the `X2` column of section B.
+
+
+\color{violet} Can you place the functions below into a table, just like for the
+statistical wrapper functions? Also, `brush_plots_other` doesn't seem like a
+good name. Can you rename it to something less vague?
+\color{black}
+
+| Function | Description | Inputs | Outputs |
+|---|---|---|---|
+| **draw_stats_histogram(stats_df)** | | |
+| **brush_plots_binary(df, stats_df, group_list, group, value)** | | |
+| **brush_plots_other(df, stats_df, group_list, group, value)** | | |
+
 
 **draw_stats_histogram(stats_df)**: This function provides a part of the shiny app to generate several histograms of statistics for each term
 
@@ -177,29 +249,75 @@ value: the column name for response variable;
 
 *return*: the shiny user interface contains histograms of statistics and scatter plots and a table of selected observations.
 
-```{r}
+\color{violet}
+Can you write captions for each of the figures? They do not need to be
+long, but should at least explain how to read the main figures and summarize the
+takeaways.
+\color{black}
+
+```{r, fig.cap = "The overall MTBrush workflow, including helper functions for deriving multiple hypothesis test statistics and final visualization."}
 include_graphics("../../MTBrush/workflow_pic.png")
 ```
 
-## Operation
 
-Before users make any interactions, the user interface of the generated Shiny app is made of a group of histograms of statistics(section A) and a scatter plot(section B) for all samples as shown in the figure "Interface before interaction". Users can brush through any histogram on section A to query for significant samples on tails, then the selected tail and the opposite end will be highlighted in different colors as shown in "Interface after brushing". The scatter plot(section D) will be replaced by a collection of scatter plots of selected samples, which allow users to check details on each selected samples. After brushing, a table(section F) will show up and the id of selected samples are on section E and we can use the drop down menu in this section to add or delete selected samples. From the table, Users can also access the test statistics of each term for selected samples. The test statistic value of the currently brushed histogram will determine the order of compounds in the table. The most extreme value will be at the top and the least extreme value will be at the bottom. For example, if a user selects an interval on the B histogram, the first compound in the table has the most extreme B test statistic. Also, scatter plots are arranged in the same order as the table.
+For example, for the randomly generated dataset above of binary perturbations,
+we can launch the Shiny interface using the call below.
+
+\color{violet}
+I think it makes sense to include a visualization on the toy dataset.
+But the table does not seem to be linked. Can you help debug this?
+
+```{r, eval = FALSE, echo = TRUE}
+brush_plots_binary(example_data, fit_results, seq_len(1000), "feature", "estimate")
+```
+\color{black}
+
+From this overview, users can interactively query for further details. An
+example is given in Figure 3. This figures shows that, by brushing a histogram,
+features lying in the mirrored range are highlighted in orange; e.g., if the
+test statistic range $t \geq 3$ was initially selected, those with $t \leq -3$
+will appear in orange. Moreover, features selected in one panel will be
+highlighted in the same color across all histograms. This allows us to study the
+distribution of statistics for all model terms within the selected set of
+features. In particular, correlation across model terms will appear as high
+significance simultaneously across several panels of histograms.
+
+After the initial interaction, the original scatterplot from Figure 2B will be
+replaced by the collection of scatterplots in D. Each panel in this collection
+provides the measurements for one feature — the 12 most significant features are
+shown by default, though more or less can be included by modifying the "ID"
+dropdown menu (E). These scatterplots of the original data support
+interpretation of test results. For example, a large positive test statistic for
+a perturbation may appear either because a feature is elevated in that
+perturbation or because it is depressed in others -- the raw data can help
+disambiguate these cases.
+
+Finally, after brushing, a table (F) appears, providing contextual information
+from the original input dataset associated with each feature. The table also
+provides the exact test statistics and model outputs, like estimated
+coefficients and $p$-values, associated with each selected feature. Like the
+panels, the tables are sorted by the magnitude of the test statistics, with the
+direction of effects color coded to match the histograms. The table is
+paginated, and there is no limit on the number of statistics that appear.
+
 
 ```{r}
 include_graphics("../../MTBrush/interface1.jpg")
 ```
 
-A: Histograms of test statistics, brush through any one of the histogram to select samples;  
-B: Before brushing, a scatter plot of all samples will appear to give an overall distribution of the dataset.  
+\color{purple}Is this information going to appear in the caption? If not, we
+should think of how to transition to this description.\color{black}
+
+A: Histograms of test statistics, brush through any one of the histogram to select features;  
+B: Before brushing, a scatterplot of all features will appear to give an overall distribution of the dataset.  
+C: After brushing, test statistics with magnitude within the selected interval will be highlighted (red for selected and orange for reflected values). The selected features will be highlighted across all histograms;
+D: The scatterplots of top 12 features in the table of selected features will be shown here. By adding or deleting the chosen ID on the left select menu, users can choose to see the scatterplot of features of interest;
+E: By default, only 12 features will be chosen at first. Users can use the dropdown menu to follow the features of interest; 
+F: The table of selected features in the brushed area. Colors match those in the upper histograms.
 
 ```{r}
 include_graphics("../../MTBrush/interface2.jpg")
 ```
-
-C: After brushing, test statistics greater than and less than the threshold will be highlighted (red for positive and orange for negative values). The selected samples will be highlighted in all histograms;  
-D: The scatter plots of top 12 samples in the table of selected samples will be shown here. By adding or deleting the chosen ID on the left select menu, users can choose to see the scatter plot of the sample they have interests on;  
-E: By default, only 12 samples will be chosen at first. Users can use the drop down menu to follow the samples of interests;  
-F: The table of selected samples in the brushed area. Color corresponds to the color in the upper histograms.
 
 # Cases Studies
 
@@ -214,59 +332,91 @@ model output, and we illustrate how `MTBrush` can streamline the process.
 ## Discovering interactions in a model microbial system
 
 Our first case study considers metabolomic expression patterns in “The
-Hitchhicker’s of the Rhizosphere” (THOR) model microbial community. This model
-system makes it possible to examine the microbial behaviors that only emerge
-when multiple species are present in a shared environment. This provides a
-controlled environment with which to begin probing the microbial strain-level
-interactions that shape function in real-world microbiomes. We consider data
-from this system from an experiment designed to characterize the influence of
-species interactions on the community metabolome. Specifically, 12
-configurations of the THOR system were grown, corresponding to the presence or
-absence of each of three species, Bifidobacterium (todo?) (B), Flavobacterium
-johnsonii (F), and either Pseudomonas Koreensis (K) or a corresponding mutant
-whose ability to produce the antibiotic korreincene (todo?) has been knocked out
-(Table X). Five replicates were gathered for each configuration, and each was
-metabolically profiled using Liquid chromatography–mass spectrometry (LCMS). The
-scientific goal of this study is to detect compounds whose expression in joint
-communities (e.g., F + K) cannot be explained by simply interpolating expression
-when each of the constituent species are present in isolation. These metabolites
-may reflect higher-level competitive or synergistic effects within the
-community.
+Hitchhicker’s of the Rhizosphere” (THOR) model microbial community
+\color{violet}(cite Hurley, Chevrette)\color{black} designed to shed light on
+the molecular biology of species interactions. Specifically, this model system
+makes it possible to examine the microbial behaviors that only emerge when
+multiple species are present in a shared environment. A more systematic
+characterization of the mechanisms through which microbes affect one another's
+behavior is a key first step in the effort to design human-engineered microbial
+communities. Such communities could be used to support human health and climate
+change mitigation.
 
-The associated dataset contains 60 samples, each with expression measurements
-across 3882 compounds. We frame the analysis as a parallel multiple hypothesis
-testing problem. For each compound, we fit the saturated linear model
-`log(Abundance) ~ B * F * K`. The main effects describe how the expression level
-for a compound varies when the associated species are present or absent from the
-community. Interaction effects measure the extent to which these effects are
-modulated by coexistence of multiple species. For example, a strong, positive `F
-: K` interaction terms for a compound suggests that, in the FK condition, the
-compound is present at much higher levels than would be expected when only one
-of F or K are present in isolation.
+We consider data from this system from an experiment designed to
+characterize the influence of species interactions on the community metabolome.
+Specifically, 12 configurations of the THOR system were grown, corresponding to
+the presence or absence of each of three species, Bifidobacterium (todo?) (B),
+Flavobacterium johnsonii (F), and either Pseudomonas Koreensis (K) or a
+corresponding mutant whose ability to produce the antibiotic korreincene (todo?)
+has been knocked out (Table X). Five replicates were gathered for each
+configuration, and each was metabolically profiled using Liquid
+chromatography–mass spectrometry (LCMS). The scientific goal of this study is to
+detect compounds whose expression in joint communities (e.g., F + K) cannot be
+explained by simply interpolating expression when each of the constituent
+species are present in isolation. These metabolites may reflect higher-level
+competitive or synergistic effects within the community.
 
-Figure `\ref{fig:thor_overview}` shows the MTBrush overview before the user has
-provided any query. From the scatterplot, we observe that the distribution of
-data points is relatively uniform across conditions and there are no extreme
-outliers.
+The code below loads the associated dataset, which contains 60 samples, each
+with expression measurements across 3882 compounds.
+
+\color{violet}
+```{r, eval = FALSE, echo = TRUE}
+df <- read_csv("clean.csv") # Can you include the THOR dataset in the package by default? Or, if it is too large, create a link to directly download this dataset?
+```
+\color{black}
+
+We frame the analysis as a parallel multiple hypothesis testing problem. For
+each compound, we fit the saturated linear model `log(Abundance) ~ B * F * K`.
+This is captured by the `lm_func` helper in the block below.
+
+```{r, eval = FALSE, echo = TRUE}
+lm_func <- function(x) {
+  lm(log(value) ~ B * F * K, data = x)
+}
+
+code <- function(z) { ifelse(str_detect(z, "\\+"), 1, -1) }
+fits <- df %>%
+  mutate(across(B:M, code)) %>%
+  split_dataset(compound) %>%
+  fit_statistics(lm_func, compound)
+group_list <- unique(df$compound)
+```
+
+The main effects describe how the expression level for a compound varies when
+the associated species are present or absent from the community. Interaction
+effects measure the extent to which these effects are modulated by coexistence
+of multiple species. For example, a strong, positive `F : K` interaction terms
+for a compound suggests that, in the FK condition, the compound is present at
+much higher levels than would be expected when only one of F or K are present in
+isolation.
+
+We launch our interface  using the following call,
+
+```{r, eval = FALSE, echo = TRUE}
+brush_plots_binary(df, fits, group_list, "compound", "value")
+```
+
+Figure `\ref{fig:thor_overview}` provides a static overview of the interface
+before the user has provided any query. From the scatterplot, we observe that
+the distribution of data points is relatively uniform across conditions and
+there are no extreme outliers.
 
 ```{r}
 include_graphics("../../MTBrush/before.PNG")
 ```
 
-In the figure below, we brushed compounds with large, positive F effects. The
-reflected negative effect compounds are in orange. In this selection, the
-associated FK effects are mostly positive and the associated BFK effects are
-mostly negative (compare the orange bulk within this panel with 0). A possible
-explanation is that these selected, orange compounds are consumed by F, which is
-why they decrease in the presence of F. The positive FK effects suggest that 
-these compounds are not being consumed as rapidly when K is present. This is
-consistent with our understanding of the system...
-
-But when all three
-are present, the compound is less abundant again, it is an evidence for B
-protecting F.
-
-In this way, MTBrush has helped clarify the mechanisms that underlie emergent phenomena that have 
+In the figure below, we brushed compounds with large, positive F effects. In
+this selection, the associated FK effects are mostly positive and the associated
+BFK effects are mostly negative -- compare the orange bulk within this panel
+with 0. A possible explanation is that these selected, orange compounds are
+consumed by F, which is why they decrease in the presence of F. The positive FK
+effects suggest that these compounds are not being consumed as rapidly when K is
+present. This is consistent with a decrease in F's population induced by K's
+production of the antibiotic koreenceine. Finally, considering the B:F:K panel
+shows that these effects are generally negative. Therefore, the high abundance F
+metabolites have a lower abundance than would be predicted by a two-way
+interaction model alone. This is consistent with B protecting F in the
+community, a previously documented phenomenon.
 
 ```{r}
 include_graphics("../../MTBrush/Thor_example.png")
@@ -274,13 +424,75 @@ include_graphics("../../MTBrush/Thor_example.png")
 
 ## Navigating California home prices
 
-Our next example uses `MTBrush` to support exploration of the California Housing Price dataset \cite{housing}. This dataset includes prices of 20,640 homes, together with features of the homes and their neighborhoods, including the number of rooms and neighborhood’s median income, for example. These data are often used to evaluate supervised learning methods. Our focus instead is to visualize how the conditions of a home and neighborhood relate to observed prices, and how these effects vary geographically.
+Our second example uses MTBrush to support exploration of the California Housing
+Price dataset \cite{housing}. This dataset includes prices of 20,640 homes,
+together with features of the homes and their neighborhoods, including the
+number of rooms and neighborhood’s median income, for example. The data are
+loaded in the block below,
 
-Specifically, to understand how the influence of home and neighborhood features are modulated by geographic location, we partition the dataset into geographically disjoint sets and fit a linear model within each. The coefficients from these models can be plotted as histograms and brushed to identify features that are important in some locations but not others. Since some locations have many more houses than others, partitioning the data with a simple geographic grid would result in highly imbalanced sample sizes across the ensemble. For areas with limited number of houses, the results would not be comparable to those in areas with larger sample sizes. To address this, we first apply K-means to the geographic coordinates of the observed homes, resulting in 2064 clusters with more balanced sample sizes.
+\color{violet}
+Can we also include the housing dataset in the package by default? Also, can we
+include better names than `df_old` and `df`?
+\color{black}
 
-Figure \ref{fig:homestart} shows the distribution of variable features before any user interactions. From this overview, we notice that the home prices are inversely related to the population density. In Figure \ref{fig:homebrush}, we brushed to highlight those houses with positive households effects. We find that the corresponding households and median income interaction effects are negative, suggesting that median income restrains the positive effects of households. Specifically, an increase in  the median income of a neighborhood has a smaller effect on average home price when the number of households in that neighborhood is large. When the population variable is also added, the three-way interaction term seems to have a positive effects again. 
+```{r, eval = FALSE}
+df_old <- read_csv("housing.csv")
+head(df_old)
+```
 
-For this dataset, it is typical to fit a single nonlinear model use it to make predictions for house price. Interpreting the result of this fit can be challenging, however. In contrast, by interacting with a full ensemble of simple models, we can easily compare geographic variation in effects, using individual panels to observe characteristics of individual homes in each area.
+These data are often used to evaluate supervised learning methods. Our focus
+instead is to visualize how the conditions of a home and neighborhood relate to
+observed prices, and how these effects vary geographically. To understand how
+the influence of home and neighborhood features are modulated by geographic
+location, we partition the dataset into geographically disjoint sets and fit a
+linear model within each. The coefficients from these models can be plotted as
+histograms and brushed to identify features that are important in some locations
+but not others. Since some locations have many more houses than others,
+partitioning the data with a simple geographic grid would result in highly
+imbalanced sample sizes across the ensemble. For areas with few houses, the
+results would not be comparable to those in areas with larger sample sizes. To
+address this, we first apply $K$-means to the geographic coordinates of the
+observed homes, resulting in 2064 clusters with more balanced sample sizes.
+
+```{r, echo = TRUE, eval = FALSE}
+house_cluster <- df_old %>%
+  select(longitude, latitude) %>%
+  kmeans(2064)
+
+df <- cbind(cluster = house_cluster$cluster, df_old) %>%
+   group_by(cluster) %>%
+   filter(n() > 10)
+```
+
+We compute test statistics and launch our app in the block below,
+
+```{r, echo = TRUE, eval = FALSE}
+lm_func <- function(x) {
+  lm(median_house_value ~ population * households * median_income, data = x)
+}
+
+subsets <- split_dataset(df, cluster)
+fits <- fit_statistics(subsets, lm_func, cluster)
+group_list <- unique(df$cluster)
+brush_plots_other(df, fits, group_list, cluster, median_house_value)
+```
+
+Figure \ref{fig:homestart} shows the distribution of variable features before
+any user interactions. From this overview, we notice that the home prices are
+inversely related to the population density. In Figure \ref{fig:homebrush}, we
+brushed to highlight those houses with positive households effects. We find that
+the corresponding households and median income interaction effects are negative,
+suggesting that median income restrains the positive effects of households.
+Specifically, an increase in  the median income of a neighborhood has a smaller
+effect on average home price when the number of households in that neighborhood
+is large. When the population variable is also added, the three-way interaction
+term seems to have a positive effects again.
+
+For this dataset, it is typical to fit a single nonlinear model use it to make
+predictions for house price. Interpreting the result of this fit can be
+challenging, however. In contrast, by interacting with a full ensemble of simple
+models, we can easily compare geographic variation in effects, using individual
+panels to observe characteristics of individual homes in each area.
 
 ```{r}
 include_graphics("../../MTBrush/example2.png")
@@ -288,23 +500,31 @@ include_graphics("../../MTBrush/example2.png")
 
 # Summary
 
-MTBrush helps to perform a multiple hypothesis testing for similar samples in a
-large number of groups. After clean the data into the type of input data on the
-pipeline, given a model, we can easily apply the model to all the groups and
-visualize test statistics. Then by brushing through linked diagrams, we can
-interpret the data in a more intuitive and efficient way.
+MTBrush supports interactive visualization of multiple hypothesis testing
+results. It is especially suited to settings where several test statistics are
+extracted per feature; for example, when a multiple regression model is fitted
+across features. The package provides functions to guide data preparation, model
+fitting, and final interactive visualization. We have found the package
+effective in perturbation experiments (case study 1), though it can be applied
+to understand the relationship between main and interaction effects in multiple
+testing scenarios more generally (case study 2). We find that brushing through
+linked views provides an intuitive and efficient approach to exploring multiple
+hypotheses.
 
-However, currently we give users the freedom to use their own model and believe
-that the model is valid, so in the future work we will put some effort on
-checking the correctness and effectiveness of the model like implementing the
-multiple hypothesis testing outputs. we will include a more complete process of
-hypothesis testing including null and alternative hypothesis. We will pay
-attention to the p-value and avoid rejecting the null hypothesis due to the
-tolerance of significant level when dealing with a bunch of test statistics. In
-the future, we will consider adding multiple brushes to the panel so that we
-will get more information from plots and it will be easier to compare. Lastly,
-we may add method to deal with data sets contains the mixing of binary and
-non-binary variables, since this package only apply to binary or non-binary data
-type.
+Though the provided helpers allow user to specify arbitrary test statistics
+within each feature, we do not yet supply diagnostics for checking model fit or
+validity. We also do not report local false discovery rate estimates associated
+with selected test statistics. It would be worthwhile to develop a brushing
+function for datasets of mixed types, since the package in its current form only
+applies to homogeneous binary or continuous inputs. These are all areas for
+future development. Finally, though the path is less clear, we note that recent
+work has suggested the possibility of accounting for interactive exploration of
+hypotheses in simple setups \color{violet}[cite Lei and Fithian]\color{black},
+and integrating this work into the MTBrush interface is an intriguing
+possibility.
 
-Download the MTBrush package through: remotes::install_github("YixingTT/MTBrush/MTBrush")
+The MTBrush package can be installed by running
+`remotes::install_github("YixingTT/MTBrush/MTBrush")` Detailed documentation can
+be found at [tinyurl/link](tinyurl/link). The interactive interfaces created in
+our case studies can be viewed by visiting [first/shiny/demo](first/shiny/demo)
+and [second/shiny/demo](second/shiny/demo).

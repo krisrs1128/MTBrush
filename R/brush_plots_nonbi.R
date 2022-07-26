@@ -16,7 +16,7 @@
 #' @import shiny
 #' @importFrom magrittr %>%
 
-brush_plots_other <- function(df, stats_df, group_list, group, value) {
+brush_plots_nonbi <- function(df, stats_df, group_list, group, value) {
   stats_df_param <- stats_df %>%
     filter(term != "(Intercept)")
   past_candidates <- c("-1")

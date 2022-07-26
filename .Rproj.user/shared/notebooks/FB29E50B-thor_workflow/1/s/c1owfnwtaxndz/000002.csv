@@ -1,0 +1,25 @@
+"0","df <- read_csv(""clean.csv"")"
+"2","Missing column names filled in: 'X1' [1]"
+"2","
+[36m──[39m [1mColumn specification[22m [36m─────────────────────────────────────────────────────────────────────────────────[39m
+cols(
+  X1 = [32mcol_double()[39m,
+  compound = [32mcol_double()[39m,
+  exper_id = [31mcol_character()[39m,
+  date = [34mcol_date(format = """")[39m,
+  condition = [31mcol_character()[39m,
+  replicate = [32mcol_double()[39m,
+  value = [32mcol_double()[39m,
+  B = [31mcol_character()[39m,
+  F = [31mcol_character()[39m,
+  K = [31mcol_character()[39m,
+  D = [31mcol_character()[39m,
+  M = [31mcol_character()[39m
+)
+"
+"0","code <- function(z) { ifelse(str_detect(z, ""\\+""), 1, -1) }"
+"0","fits <- df %>%"
+"0","  mutate(across(B:M, code)) %>%"
+"0","  split_dataset(compound) %>%"
+"0","  fit_statistics(lm_func, compound)"
+"0","group_list <- unique(df$compound)"

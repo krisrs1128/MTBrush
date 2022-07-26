@@ -1,0 +1,16 @@
+citHeader("To cite MTBrush in publications use:")
+
+citEntry(
+  entry    = "Article",
+  title    = "Test",
+  author   = "test",
+  journal  = "test",
+  year     = 2022,
+  volume   = 2,
+  number   = 2,
+  pages    = 2,
+  url      = "test",
+  textVersion = paste("1.1.1"
+
+  )
+)

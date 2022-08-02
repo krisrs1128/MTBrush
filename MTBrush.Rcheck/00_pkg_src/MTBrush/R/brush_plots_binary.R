@@ -1,29 +1,37 @@
-#' generate a shiny app for general data type
+#' generate a shiny app for binary data type
 #'
-#'This is the method to generate a shiny app displaying the histograms of statistics and scatter plots and a table
-#'of selected observations.
+#'This method launch the Shiny app to show results from previous multiple hypothesis testings and allow users to query for details on conspicuous features.
+#'Use this function when the condition/explanatory variables have binary data type.
 #'
-#' @param df the processed data frame
-#' @param stats_df the output table from fit_statistics function
-#' @param group_list a list of distinct observations
-#' @param group the column name for grouping variable
-#' @param value the column name for response variable
+#' @param df A long data.frame with sample measurements across all features
+#' @param stats_df A data.frame contains statistics of tests across features; the output from fit_statistics function
+#' @param group_list The list of distinct features after splitting the data.frame
+#' @param group The name of the column used when initially splitting measurements across features
+#' @param value The name of the column used to describe response variable
 #'
-#' @return a shiny app
+#' @return A interactive Shiny app interface allow users to explore details of test results
 #' @export
 #' @import dplyr
 #' @import ggplot2
 #' @import shiny
+#' @importFrom DT datatable formatStyle styleEqual renderDT DTOutput
 #' @importFrom magrittr %>%
-
-brush_plots_other <- function(df, stats_df, group_list, group, value) {
+#'
+#' @examples
+#' lm_func <- function(x) { lm(log(value) ~ B * F * K, data = x) }
+#' code <- function(z) { ifelse(str_detect(z, "\\+"), 1, -1) }
+#' fits <- thor %>% mutate(across(B:M, code)) %>% split_dataset(compound) %>% fit_statistics(lm_func, compound)
+#' group_list <- unique(thor$compound)
+#' brush_plots_binary(thor, fits, group_list, "compound", "value")
+brush_plots_binary <- function(df, stats_df, group_list, group, value){
   stats_df_param <- stats_df %>%
     filter(term != "(Intercept)")
   past_candidates <- c("-1")
-  set_theme()
 
+  set_theme()
   shinyApp(
     ui = fluidPage(
+      ## could add a title by adding a new param
       column(
         plotOutput("distPlot", brush = brushOpts(direction = "x", id = "brush")),
         width = 6
@@ -34,16 +42,14 @@ brush_plots_other <- function(df, stats_df, group_list, group, value) {
         width = 6
       ),
 
-      dataTableOutput("table"),
+      DTOutput("table"),
       selectInput("group", "ID", choices = group_list, multiple = TRUE),
-      selectInput("feature", "Features:", choices = names(df)[2:(ncol(df))], multiple = FALSE),
       downloadButton("download", "Download current rows")
     ),
 
     server = function(input, output, session) {
 
       brushed_ids <- reactive({
-        message("brush ids")
         current_points <- brushedPoints(stats_df_param, input$brush)
         current_points %>%
           select(term, .data[[group]])
@@ -51,7 +57,6 @@ brush_plots_other <- function(df, stats_df, group_list, group, value) {
 
 
       table_data <- reactive({
-        message("table data")
         current_rows <- stats_df_param %>%
           mutate(statistic = round(statistic, 5)) %>%
           select(.data[[group]], term, statistic) %>%
@@ -62,8 +67,7 @@ brush_plots_other <- function(df, stats_df, group_list, group, value) {
           current_rows$magnitude <- abs(current_rows[, brushed_ids()$term[1]])
           max <- max(current_rows$magnitude)
           min <- min(current_rows$magnitude)
-          stat_term <- brushed_ids()$term[1]
-
+          stat_term <- as.character(brushed_ids()$term[1])
 
           current_rows <- stats_df_param %>%
             mutate(statistic = round(statistic, 5)) %>%
@@ -72,13 +76,10 @@ brush_plots_other <- function(df, stats_df, group_list, group, value) {
           current_rows$magnitude <- abs(current_rows[, brushed_ids()$term[1]])
 
           current_rows <- current_rows %>%
-            filter(magnitude <= max & magnitude >= min)
-
-          current_rows <- current_rows %>%
+            filter(magnitude <= max & magnitude >= min) %>%
             arrange(-magnitude) %>%
-            arrange_at(vars(-cluster:-magnitude))
-          current_rows <- current_rows %>%
-            mutate(color = sign(current_rows[, brushed_ids()$term[1]])) %>%
+            arrange_at(vars(-.data[[group]]:-magnitude)) %>%
+            mutate(color = sign(.data[[stat_term]])) %>%
             select(-magnitude)
         }
       })
@@ -117,19 +118,22 @@ brush_plots_other <- function(df, stats_df, group_list, group, value) {
         }
       })
 
-      output$table <- renderDataTable({
-        message("data table")
+      output$table <- renderDT({
+        if(is.null(table_data())) {
+          return()
+        }
+
         datatable(
           table_data(),
           rownames = FALSE,
           filter="top",
           options = list(sDom = '<"top">lrt<"bottom">ip', columnDefs = list(list(visible=FALSE, targets=8)))
-        ) %>% formatStyle('color', target = 'row', backgroundColor = styleEqual(c(-1,1), c('#ffc14e', '#ff7676')))
+        ) %>%
+        formatStyle('color', target = 'row', backgroundColor = styleEqual(c(-1,1), c('#ffc14e', '#ff7676')))
       })
 
       output$plot_g2 <- renderPlot({
-        message("plot g2")
-        cur_groups <- unique(input[[group]])
+        cur_groups <- unique(input$group)
         if (length(cur_groups) != 0) {
           x_small <- df %>%
             filter(.data[[group]] %in%  cur_groups) %>%
@@ -139,32 +143,32 @@ brush_plots_other <- function(df, stats_df, group_list, group, value) {
         }
 
         p <- ggplot(x_small) +
-          geom_point(aes_string(input$feature, value)) +
+          geom_point(aes(condition, value)) +
+          scale_y_log10(breaks = 10 ^ (5:9)) +
           labs(y =  "Intensity Values") +
+          theme(axis.text.x = element_text(angle = 90))
 
-          if (length(cur_groups) != 0) {
-            p <- p + facet_wrap(~ group, scales = "free_y")
-          }
+        if (length(cur_groups) != 0) {
+          p <- p + facet_wrap(~ group, scales = "free_y")
+        }
         p
       })
 
-      observe({
-        message("observe")
+      observeEvent(input$brush, {
         if(is.null(table_data())){
           candidates = NULL
         } else{
           candidates <- table_data()[[group]]
         }
 
-
         if (!all(candidates == past_candidates)) {
-          selected_ids <- candidates[1:12]
+          selected_ids <- head(candidates, 12)
           past_candidates <- candidates
         } else {
-          selected_ids <- input[[group]]
+          selected_ids <- input$group
         }
 
-        updateSelectInput(session, group, choices = candidates, selected = selected_ids)
+        updateSelectInput(session, "group", choices = candidates, selected = selected_ids)
       })
     },
   )

@@ -8,7 +8,7 @@ author:
     - Madison, WI
     - 53706
     orcid: 0000-0002-9079-593X
-    email:  ytu26@wisc.edu
+    email: ytu26@wisc.edu
   - name: Marc Chevrette
   - name: Chris Thomas
   - name: Jo Handelsman
@@ -120,23 +120,25 @@ of data.frames, one for each metabolite. The second maps a user-specified
 hypothesis testing function across features defined by the first. A description
 of the inputs and outputs of this function are provided in Table 1.
 
-| Function | Description | Inputs | Outputs |
-|---|---|---|---|
-| **`split_dataset(df, group)`** | | |
-| **`fit_statistics(subsets, lm_func, group)`** | | |
-| | | |
-
 \color{violet}
 Can you figure out how to put the information below into the table
 above? My guess is that the R Journal template file discusses how to include /
 format tables for publication, but let me know if this is not easy to find.
 \color{black}
 
-This function splits the given data set into many smaller subsets based on the feature of interest. Each subset only contains measurements of a sample and all subsets take same measurements. | `df`: A long `data.frame` with sample measurements across all features. * `group`: A column giving the name of the feature over which to split the `data.frame` for downstream testing. | A list with one `data.frame` for each feature specified in `group`. |
-This method maps overall all groups of subsets and returns a set of test statistics associated with each. The testing function can be specified by the user. | `subsets`: List of data.frame subsets as output by `split_dataset`  
-`lm_func`: A function that takes one subset of samples and returns a vector of test statistics associated with it.
-`group`: The name of the column used when initially splitting measurements across features. |
-A single data.frame with statistics from the collection of tests across features
+```{r}
+helpers = data.frame(
+  "Function" = c("split_dataset(df, group)", "fit_statistics(subsets, lm_func, group)"),
+  "Description" = c("This function splits the given data set into many smaller subsets based on the feature of interest. Each subset only contains measurements of a sample and all subsets take same measurements.", "This method maps overall all groups of subsets and returns a set of test statistics associated with each. The testing function can be specified by the user."),
+  "Inputs" = c("`df`: A long `data.frame` with sample measurements across all features. `group`: The column name of the feature over which to split the `data.frame` for downstream testing.","`subsets`: List of `data.frame` subsets as output by `split_dataset` `lm_func`: A function that takes one subset of samples and returns a vector of test statistics associated with it. `group`: The name of the column used when initially splitting measurements across features."),
+  "Outputs" = c(" A list with one `data.frame` for each feature specified in `group`.","A single `data.frame` with statistics from the collection of tests across features")
+)
+helpers <- helpers %>%
+  mutate_all(linebreak)
+library("kableExtra")
+kbl(helpers, caption = 'Helper Methods', format = "latex", escape = T) %>%
+  kable_styling(full_width = T) 
+```
 
 For example, we split a randomly generated dataset in the block below. The
 simulated data supposes a design in which two perturbations (A and B) are
@@ -169,6 +171,13 @@ described in the documentation for this function.
 library(MTBrush)
 library(tidyverse)
 
+alpha = 2.6
+beta1 = 0.3
+beta2 = -0.5
+beta3 = -1.3
+
+error <- rnorm(20000, 0, 1)
+
 example_data <- expand.grid(
   sample = seq_len(5),
   feature = seq_len(1000),
@@ -176,7 +185,7 @@ example_data <- expand.grid(
   X2 = c(FALSE, TRUE)
 ) %>%
   mutate(
-    value = rnorm(n()),
+    value = alpha + beta1*X1 + beta2*X2 + beta3*X1*X2 + error,
     condition = case_when( 
       X1 & X2 ~ "X1X2",
       X1 & !X2 ~ "X1",
@@ -184,6 +193,8 @@ example_data <- expand.grid(
       !X1 & !X2 ~ "Neither"
       )
     )
+
+#write.csv(example_data, "/Users/tuyixing/Desktop/UW Course/MTBrush/example.csv")
 
 fit_results <- example_data %>%
   split_dataset(feature) %>%
@@ -215,47 +226,21 @@ values in the `X2` column of section B.
 
 \color{violet} Can you place the functions below into a table, just like for the
 statistical wrapper functions? Also, `brush_plots_other` doesn't seem like a
-good name. Can you rename it to something less vague?
+good name. Can you rename it to something less vague? How about `brush_plots_nonbi`
 \color{black}
 
-| Function | Description | Inputs | Outputs |
-|---|---|---|---|
-| **draw_stats_histogram(stats_df)** | | |
-| **brush_plots_binary(df, stats_df, group_list, group, value)** | | |
-| **brush_plots_other(df, stats_df, group_list, group, value)** | | |
-
-
-**draw_stats_histogram(stats_df)**: This function provides a part of the shiny app to generate several histograms of statistics for each term
-
-*parameters*: 
-
-stats_df: the output table from fit_statistics function
-
-*return*: several histograms of all subsets based on terms in the model
-
-**brush_plots_binary(df, stats_df, group_list, group, value)**: This method generates a shiny app displaying histograms of statistics and scatter plots and a table of selected observations. Use this function when the condition/explanatory variables have binary data type.
-
-*parameters*: 
-
-df: the processed data frame;  
-stats_df: the output table from fit_statistics function;  
-group_list: a list of distinct observations;  
-group: the column name for grouping variable;  
-value: the column name for response variable;
-
-*return*: the shiny user interface contains histograms of statistics and scatter plots and a table of selected observations. 
-
-**brush_plots_other(df, stats_df, group_list, group, value)**: This method is similar to brush_plots_binary. It also generates a shiny app displaying the histograms of statistics and scatter plots and a table of selected observations. Use this function when the condition/explanatory variables have non-binary data type.
-
-*parameters*: 
-
-df: the processed data frame;  
-stats_df: the output table from fit_statistics function;  
-group_list: a list of distinct observations;  
-group: the column name for grouping variable;  
-value: the column name for response variable;
-
-*return*: the shiny user interface contains histograms of statistics and scatter plots and a table of selected observations.
+```{r}
+visulizations = data.frame(
+  "Function" = c("draw_stats_histogram( stats_df)", "brush_plots_binary(df, stats_df, group_list, group, value)", "brush_plots_nonbi(df, stats_df, group_list, group, value)"),
+  "Description" = c("This function generates histograms of statistics for all terms calculated by `fit_statistics` which also serve as base plots in the Shiny App interface to make interactions on", "This method launchs the Shiny app to show results from previous multiple hypothesis testings and allow users to query for details on conspicuous features. Use this function when the condition/explanatory variables have binary data type.", "This method is similar to `brush_plots_binary`, the only difference is it applys to non-binary explanatory variables."),
+  "Inputs" = c("`stats_df`: A `data.frame` contains statistics of tests across features; the output from `fit_statistics(subsets, lm_func, group)` function", "`df`: The same long `data.frame` with sample measurements across all features used in helper methods. `stats_df`: A `data.frame` contains statistics of tests across features. `group_list`: The list of distinct features after splitting the `data.frame`. `group`: The name of the column used when initially splitting measurements across features. `value`: The name of the column used to describe response variable", "Same as above"),
+  "Outputs" = c("Histograms of statistics based on results from previous hypothesis testings across features", "A interactive Shiny app interface allow users to explore details of test results", "Same as above")
+)
+visulizations <- visulizations %>%
+  mutate_all(linebreak)
+kbl(visulizations, caption = 'Visualization Methods on Test Results', format = "latex", escape = T) %>%
+  kable_styling(full_width = T) 
+```
 
 \color{violet}
 Can you write captions for each of the figures? They do not need to be
@@ -309,21 +294,14 @@ direction of effects color coded to match the histograms. The table is
 paginated, and there is no limit on the number of statistics that appear.
 
 
-```{r}
+```{r, fig.cap = "Descriptions for each section of the initial interface. A: Histograms of test statistics, brush through any one of the histogram to select features;  B: Before brushing, a scatterplot of all features will appear to give an overall distribution of the dataset."}
 include_graphics("../../MTBrush/interface1.jpg")
 ```
 
 \color{purple}Is this information going to appear in the caption? If not, we
-should think of how to transition to this description.\color{black}
+should think of how to transition to this description. Yes they are the caption\color{black}
 
-A: Histograms of test statistics, brush through any one of the histogram to select features;  
-B: Before brushing, a scatterplot of all features will appear to give an overall distribution of the dataset.  
-C: After brushing, test statistics with magnitude within the selected interval will be highlighted (red for selected and orange for reflected values). The selected features will be highlighted across all histograms;
-D: The scatterplots of top 12 features in the table of selected features will be shown here. By adding or deleting the chosen ID on the left select menu, users can choose to see the scatterplot of features of interest;
-E: By default, only 12 features will be chosen at first. Users can use the dropdown menu to follow the features of interest; 
-F: The table of selected features in the brushed area. Colors match those in the upper histograms.
-
-```{r}
+```{r, fig.cap = "Descriptions for each section of the interface after brushing. C: After brushing, test statistics with magnitude within the selected interval will be highlighted (red for selected and orange for reflected values). The selected features will be highlighted across all histograms; D: The scatterplots of top 12 features in the table of selected features will be shown here. By adding or deleting the chosen ID on the left select menu, users can choose to see the scatterplot of features of interest; E: By default, only 12 features will be chosen at first. Users can use the dropdown menu to follow the features of interest; F: The table of selected features in the brushed area. Colors match those in the upper histograms."}
 include_graphics("../../MTBrush/interface2.jpg")
 ```
 
@@ -369,7 +347,7 @@ with expression measurements across 3882 compounds.
 
 \color{violet}
 ```{r, eval = FALSE, echo = TRUE}
-df <- read_csv("clean.csv") # Can you include the THOR dataset in the package by default? Or, if it is too large, create a link to directly download this dataset?
+df <- read_csv("../../MTBrush/clean.csv") # Can you include the THOR dataset in the package by default? Or, if it is too large, create a link to directly download this dataset?
 ```
 \color{black}
 
@@ -409,7 +387,7 @@ before the user has provided any query. From the scatterplot, we observe that
 the distribution of data points is relatively uniform across conditions and
 there are no extreme outliers.
 
-```{r}
+```{r, fig.cap = "The initial interface of the THOR data before interaction"}
 include_graphics("../../MTBrush/before.PNG")
 ```
 
@@ -426,7 +404,7 @@ metabolites have a lower abundance than would be predicted by a two-way
 interaction model alone. This is consistent with B protecting F in the
 community, a previously documented phenomenon.
 
-```{r}
+```{r, fig.cap = "The interface after brushing through compounds on the left tail of the F histogram"}
 include_graphics("../../MTBrush/Thor_example.png")
 ```
 
@@ -444,8 +422,8 @@ include better names than `df_old` and `df`?
 \color{black}
 
 ```{r, eval = FALSE}
-df_old <- read_csv("housing.csv")
-head(df_old)
+house_price <- read_csv("../../MTBrush/housing.csv")
+head(house_price)
 ```
 
 These data are often used to evaluate supervised learning methods. Our focus
@@ -463,11 +441,11 @@ address this, we first apply $K$-means to the geographic coordinates of the
 observed homes, resulting in 2064 clusters with more balanced sample sizes.
 
 ```{r, echo = TRUE, eval = FALSE}
-house_cluster <- df_old %>%
+house_cluster <- house_price %>%
   select(longitude, latitude) %>%
   kmeans(2064)
 
-df <- cbind(cluster = house_cluster$cluster, df_old) %>%
+house_balanced <- cbind(cluster = house_cluster$cluster, house_price) %>%
    group_by(cluster) %>%
    filter(n() > 10)
 ```
@@ -479,10 +457,10 @@ lm_func <- function(x) {
   lm(median_house_value ~ population * households * median_income, data = x)
 }
 
-subsets <- split_dataset(df, cluster)
+subsets <- split_dataset(house_balanced, cluster)
 fits <- fit_statistics(subsets, lm_func, cluster)
-group_list <- unique(df$cluster)
-brush_plots_other(df, fits, group_list, cluster, median_house_value)
+group_list <- unique(house_balanced$cluster)
+brush_plots_nonbi(house_balanced, fits, group_list, cluster, median_house_value)
 ```
 
 Figure \ref{fig:homestart} shows the distribution of variable features before
@@ -502,7 +480,7 @@ challenging, however. In contrast, by interacting with a full ensemble of simple
 models, we can easily compare geographic variation in effects, using individual
 panels to observe characteristics of individual homes in each area.
 
-```{r}
+```{r, fig.cap = "The interface after selecting houses with positive households effects in the house price example"}
 include_graphics("../../MTBrush/example2.png")
 ```
 

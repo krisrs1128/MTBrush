@@ -1,21 +1,28 @@
 #' generate a shiny app for binary data type
 #'
-#'This is the method to generate a shiny app displaying the histograms of statistics and scatter plots and a table
-#'of selected observations.
+#'This method launch the Shiny app to show results from previous multiple hypothesis testings and allow users to query for details on conspicuous features.
+#'Use this function when the condition/explanatory variables have binary data type.
 #'
-#' @param df the processed data frame
-#' @param stats_df the output table from fit_statistics function
-#' @param group_list a list of distinct observations
-#' @param group the column name for grouping variable
-#' @param value the column name for response variable
+#' @param df A long data.frame with sample measurements across all features
+#' @param stats_df A data.frame contains statistics of tests across features; the output from fit_statistics function
+#' @param group_list The list of distinct features after splitting the data.frame
+#' @param group The name of the column used when initially splitting measurements across features
+#' @param value The name of the column used to describe response variable
 #'
-#' @return a shiny app
+#' @return A interactive Shiny app interface allow users to explore details of test results
 #' @export
 #' @import dplyr
 #' @import ggplot2
 #' @import shiny
 #' @importFrom DT datatable formatStyle styleEqual renderDT DTOutput
 #' @importFrom magrittr %>%
+#'
+#' @examples
+#' lm_func <- function(x) { lm(log(value) ~ B * F * K, data = x) }
+#' code <- function(z) { ifelse(str_detect(z, "\\+"), 1, -1) }
+#' fits <- thor %>% mutate(across(B:M, code)) %>% split_dataset(compound) %>% fit_statistics(lm_func, compound)
+#' group_list <- unique(thor$compound)
+#' brush_plots_binary(thor, fits, group_list, "compound", "value")
 brush_plots_binary <- function(df, stats_df, group_list, group, value){
   stats_df_param <- stats_df %>%
     filter(term != "(Intercept)")

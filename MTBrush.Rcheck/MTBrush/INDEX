@@ -1,0 +1,10 @@
+brush_plots_binary      generate a shiny app for binary data type
+brush_plots_comparison
+                        Interactive scatterplot to compare statistics
+brush_plots_nonbi       generate a shiny app for non-binary data type
+comparison_plot         Faceted scatterplot of compared statistics
+draw_stats_histogram    draw histograms of statistics for each term
+fit_statistics          Calculate test statistics across all features
+reshape_comparisons     Reshape output from tests to enable comparison
+set_theme               Function to set a minimal theme
+split_dataset           Split the data frame into many subsets

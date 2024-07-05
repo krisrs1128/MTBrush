@@ -2,7 +2,7 @@
 
 export(brush_plots_binary)
 export(brush_plots_comparison)
-export(brush_plots_other)
+export(brush_plots_nonbi)
 export(comparison_plot)
 export(draw_stats_histogram)
 export(fit_statistics)
